@@ -6,14 +6,17 @@ const {mongo, mongoconn} = require('./db/conmongo');
 const { DEFAULT_MIN_VERSION } = require('tls');
 const PORT = 3000;
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'home'));
+app.use(express.static(path.join(__dirname, 'features')));
+app.use(express.static(path.join(__dirname, 'home')));
 app.use(express.json());
-app.use(express.urlencoded({extended:true}))
+
 
 mongoconn();
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'home', 'main.html')); 
+    res.render("main")
 });
 
 
