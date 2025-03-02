@@ -4,15 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
-    <link rel="stylesheet" href="mnstl.css">
-    <link  href="/features/style.css">
     <%- include('../features/index') %>
 </head>
 <body>
-    
+    <div id="announcment1" ></div>
+    <div id="announcment2" ></div>
+    <div id="cars_container"></div>
 </body>
 </html>
-<script src='/features/mobile-navbar.js'>
+<script>
+    function load_cars() {
+        fetch('/load_cars')
+        .then(response => response.json())  // Corrected this line to response.json()
+        .then(data => {
+            const body_cars = document.getElementById('cars_container');
+            body_cars.innerHTML = '';
 
+            data.forEach(car => {
+                const car_container = document.createElement('div');
+                car_container.innerHTML = `
+                    <h1>${car.nick}</h1>
+                    <p>${car.price}</p>
+                    <p>${car.year}</p>
+                    <p>${car.color}</p>
+                    <p>${car.km_driven}</p>
+                    <p>${car.brand}</p>
+                    <p>${car.model}</p>
+                    <p>${car.switch}</p>
+                    <input type="hidden" value="${car.id}"/>
+                `;
+                body_cars.appendChild(car_container);
+            });
+        })
+        .catch(err => console.error('Error fetching cars:', err));  // Add error handling
+    }
 
+    window.onload = function() {
+        load_cars();    
+    };
 </script>
