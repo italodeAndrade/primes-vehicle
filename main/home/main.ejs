@@ -13,9 +13,13 @@
 </body>
 </html>
 <script>
+    function load_detail(id) {
+        window.location.href = `/load_dt/${id}`;
+    };
+
     function load_cars() {
         fetch('/load_cars')
-        .then(response => response.json())  // Corrected this line to response.json()
+        .then(response => response.json())  
         .then(data => {
             const body_cars = document.getElementById('cars_container');
             body_cars.innerHTML = '';
@@ -23,20 +27,17 @@
             data.forEach(car => {
                 const car_container = document.createElement('div');
                 car_container.innerHTML = `
-                    <h1>${car.nick}</h1>
                     <p>${car.price}</p>
                     <p>${car.year}</p>
-                    <p>${car.color}</p>
                     <p>${car.km_driven}</p>
                     <p>${car.brand}</p>
                     <p>${car.model}</p>
-                    <p>${car.switch}</p>
-                    <input type="hidden" value="${car.id}"/>
+                    <button onclick="load_detail(${car.id})">View Details</button>
                 `;
                 body_cars.appendChild(car_container);
             });
         })
-        .catch(err => console.error('Error fetching cars:', err));  // Add error handling
+        .catch(err => console.error('Error fetching cars:', err));  
     }
 
     window.onload = function() {

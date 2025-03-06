@@ -41,6 +41,26 @@ app.get('/load_cars', (req, res) => {
     });
 });
 
+// Route to load car details
+app.get('/load_dt/:id', (req, res) => {
+    const id = req.params.id;
+    const query = `SELECT * FROM cars WHERE id = ?`;  // Use parameterized query for safety
+
+    db.query(query, [id], (err, results) => {
+        if (err) {
+            console.error('Error fetching car details:', err);
+            return res.status(500).send('Error fetching car details');
+        }
+
+        if (results.length === 0) {
+            return res.status(404).send('Car not found');
+        }
+
+        // Render the 'details.ejs' page with the car data
+        res.render('details', { car: results[0] });  // Pass the car details to the template
+    });
+});
+
 
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
