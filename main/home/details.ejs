@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Car Details - <%= car.model %></title> 
-    <%- include('../features/index') %> 
+
 </head>
 <body>
     <div class="car_container">
-        <h1>Model: <%= car.model %></h1>  
-        <h2>Brand: <%= car.brand %></h2>  
+        <h1><%= car.model %></h1>  
+        <h2><%= car.brand %></h2>  
         <p>Year: <%= car.year %></p>     
         
         <label for="km">KM Driven:</label>
@@ -19,10 +19,12 @@
         <p id="color"><%= car.color %></p>  
 
         <label for="swt">Switchable:</label>
-        <p id="swt"><%= car.switch === 1 ? 'Yes' : 'No' %></p>  <!-
+        <p id="swt"><%= car.switch === 1 ? 'Yes' : 'No' %></p> 
 
+        <button><%= car.price %></button>
         <button>Schedule a Visit</button>
         <button>WhatsApp Chat</button>
     </div>
 </body>
 </html>
+<script></script>

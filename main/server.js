@@ -20,7 +20,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/load_cars', (req, res) => {
-    const query = 'SELECT id, model, brand, km_driven, color, switch, nick FROM cars';
+    const query = 'SELECT price,year,id, model, brand, km_driven, color, switch, nick FROM cars';
     
     db.query(query, (err, results) => {
         if (err) {
@@ -29,13 +29,15 @@ app.get('/load_cars', (req, res) => {
         }
 
         const formattedCars = results.map(car => ({
+            price:car.price,
+            year:car.year,
             id: car.id,
             model: car.model,
             brand: car.brand,
             km_driven: car.km_driven,
             color: car.color,
             switch: car.switch,
-            nick: car.nick
+            nick: car.nick,
         }));
         res.json(formattedCars);
     });
