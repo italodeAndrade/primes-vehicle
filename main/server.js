@@ -5,6 +5,7 @@ const db = require('./db/consql')
 const {mongo, mongoconn} = require('./db/conmongo');
 const { DEFAULT_MIN_VERSION } = require('tls');
 const PORT = 3000;
+const cloudinary = require('./db/cloud.js');
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'home'));
@@ -19,34 +20,61 @@ app.get('/', (req, res) => {
     res.render("main")
 });
 
-app.get('/load_cars', (req, res) => {
-    const query = 'SELECT price,year,id, model, brand, km_driven, color, switch, nick FROM cars';
+app.get('/load_cars', async (req, res) => {
+    const query = 'SELECT price, year, id, model, brand, km_driven, color, switch, nick FROM cars';
     
-    db.query(query, (err, results) => {
+    db.query(query, async (err, results) => {
         if (err) {
             console.error('Error fetching cars:', err);
             return res.status(500).send('Error fetching cars');
         }
 
-        const formattedCars = results.map(car => ({
-            price:car.price,
-            year:car.year,
-            id: car.id,
-            model: car.model,
-            brand: car.brand,
-            km_driven: car.km_driven,
-            color: car.color,
-            switch: car.switch,
-            nick: car.nick,
+
+        const formattedCars = await Promise.all(results.map(async car => {
+            try {
+
+                const cloudinaryResponse = await cloudinary.api.resources_by_tag(car.id.toString(), { max_results: 1 });
+
+
+                const carImages = cloudinaryResponse.resources.map(resource => resource.secure_url);
+
+                return {
+                    price: car.price,
+                    year: car.year,
+                    id: car.id,
+                    model: car.model,
+                    brand: car.brand,
+                    km_driven: car.km_driven,
+                    color: car.color,
+                    switch: car.switch,
+                    nick: car.nick,
+                    images: carImages 
+                };
+            } catch (error) {
+                console.error(`Error fetching images for car ID ${car.id}:`, error);
+                return {
+                    price: car.price,
+                    year: car.year,
+                    id: car.id,
+                    model: car.model,
+                    brand: car.brand,
+                    km_driven: car.km_driven,
+                    color: car.color,
+                    switch: car.switch,
+                    nick: car.nick,
+                    images: [] 
+                };
+            }
         }));
+
+
         res.json(formattedCars);
     });
 });
 
-// Route to load car details
 app.get('/load_dt/:id', (req, res) => {
     const id = req.params.id;
-    const query = `SELECT * FROM cars WHERE id = ?`;  // Use parameterized query for safety
+    const query = `SELECT * FROM cars WHERE id = ?`;
 
     db.query(query, [id], (err, results) => {
         if (err) {
@@ -58,12 +86,13 @@ app.get('/load_dt/:id', (req, res) => {
             return res.status(404).send('Car not found');
         }
 
-        // Render the 'details.ejs' page with the car data
-        res.render('details', { car: results[0] });  // Pass the car details to the template
+
+        res.render('details', { car: results[0] }); 
     });
 });
 
 
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
+
 });
