@@ -3,17 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Car Details - <%= car.model %></title> 
-
+    <title>Car Details - <%= car.model %></title>
 </head>
 <body>
     <div class="car_container">
+
+        <div class="car-photos">
+            <div id="main_photo">
+                <!-- Exibe a primeira imagem como a imagem principal -->
+                <% if (car.images.length > 0) { %>
+                    <img src="<%= car.images[0] %>" alt="Main photo of <%= car.model %>" style="width: 300px; height: auto;" />
+                <% } else { %>
+                    <p>Imagem não disponível</p>
+                <% } %>
+            </div>
+
+            <div id="oth_photo">
+                <% car.images.slice(1).forEach(function(image) { %>
+                    <img src="<%= image %>" alt="Other photo of <%= car.model %>" style="width: 100px; height: auto;" />
+                <% }); %>
+            </div>
+        </div>
+
         <h1><%= car.model %></h1>  
         <h2><%= car.brand %></h2>  
         <p>Year: <%= car.year %></p>     
         
         <label for="km">KM Driven:</label>
-        <p id="km" ><%= car.km_driven %></p>
+        <p id="km"><%= car.km_driven %></p>
 
         <label for="color">Color:</label>
         <p id="color"><%= car.color %></p>  
@@ -27,4 +44,3 @@
     </div>
 </body>
 </html>
-<script></script>

@@ -76,7 +76,7 @@ app.get('/load_dt/:id', (req, res) => {
     const id = req.params.id;
     const query = `SELECT * FROM cars WHERE id = ?`;
 
-    db.query(query, [id], (err, results) => {
+    db.query(query, [id], async  (err, results) => {
         if (err) {
             console.error('Error fetching car details:', err);
             return res.status(500).send('Error fetching car details');
@@ -86,10 +86,24 @@ app.get('/load_dt/:id', (req, res) => {
             return res.status(404).send('Car not found');
         }
 
+        const car = results[0];
 
-        res.render('details', { car: results[0] }); 
+        try {
+            const cloudinaryResponse = await cloudinary.api.resources_by_tag(car.id.toString(), { max_results: 10 });
+            const carImages = cloudinaryResponse.resources.map(resource => resource.secure_url);
+
+            car.images = carImages; // Adiciona as imagens ao objeto do carro
+
+            // Renderiza a página de detalhes com as imagens incluídas
+            res.render('details', { car });
+        } catch (error) {
+            console.error(`Error fetching images for car ID ${car.id}:`, error);
+            car.images = []; // Caso haja erro, define um array vazio
+            res.render('details', { car });
+        }
     });
 });
+
 
 
 app.listen(PORT, () => {
