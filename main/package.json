@@ -12,11 +12,12 @@
   "description": "",
   "dependencies": {
     "cloudinary": "^1.41.3",
+    "dotenv": "^16.4.7",
     "ejs": "^3.1.10",
     "express": "^4.21.2",
     "main": "file:",
     "mongoose": "^8.10.1",
-    "mysql2": "^3.12.0",
+    "pg": "^8.14.1",
     "socket.io": "^4.8.1"
   }
 }
