@@ -13,8 +13,16 @@ app.use(express.static(path.join(__dirname, 'features')));
 app.use(express.static(path.join(__dirname, 'home')));
 app.use(express.json());
 
-
+require('dotenv').config();
 mongoconn();
+
+app.get('/login', (req,res)=> {
+    res.render('user/login.ejs')
+})
+
+app.get('/register', (req,res)=> {
+    res.render('user/register.ejs')
+})
 
 app.get('/', (req, res) => {
     res.render("main")
@@ -29,13 +37,12 @@ app.get('/load_cars', async (req, res) => {
             return res.status(500).send('Error fetching cars');
         }
 
+        // Acessando 'rows' para obter os resultados da consulta
+        const cars = results.rows; 
 
-        const formattedCars = await Promise.all(results.map(async car => {
+        const formattedCars = await Promise.all(cars.map(async car => {
             try {
-
                 const cloudinaryResponse = await cloudinary.api.resources_by_tag(car.id.toString(), { max_results: 1 });
-
-
                 const carImages = cloudinaryResponse.resources.map(resource => resource.secure_url);
 
                 return {
@@ -67,14 +74,13 @@ app.get('/load_cars', async (req, res) => {
             }
         }));
 
-
         res.json(formattedCars);
     });
 });
 
 app.get('/load_dt/:id', (req, res) => {
     const id = req.params.id;
-    const query = `SELECT * FROM cars WHERE id = ?`;
+    const query = `SELECT * FROM cars WHERE id = $1`;
 
     db.query(query, [id], async  (err, results) => {
         if (err) {
@@ -86,24 +92,35 @@ app.get('/load_dt/:id', (req, res) => {
             return res.status(404).send('Car not found');
         }
 
-        const car = results[0];
+        const car = results.rows[0];
 
         try {
             const cloudinaryResponse = await cloudinary.api.resources_by_tag(car.id.toString(), { max_results: 10 });
             const carImages = cloudinaryResponse.resources.map(resource => resource.secure_url);
 
-            car.images = carImages; // Adiciona as imagens ao objeto do carro
+            car.images = carImages; 
 
-            // Renderiza a página de detalhes com as imagens incluídas
             res.render('details', { car });
         } catch (error) {
             console.error(`Error fetching images for car ID ${car.id}:`, error);
-            car.images = []; // Caso haja erro, define um array vazio
+            car.images = []; 
             res.render('details', { car });
         }
     });
 });
 
+app.post('/register_user', (req, res) => {
+    const { name, dt_birth, cpf, address, phone, email, password } = req.body;
+    const query = 'INSERT INTO users (nick, dt_birth, cpf, address, phone, email, password) VALUES ($1, $2, $3, $4, $5, $6, $7)';
+    db.query(query, [name, dt_birth, cpf, address, phone, email, password], (err) => {
+        if (err) {
+            console.error('Error inserting user:', err);
+            return res.status(500).send({ error: 'Error inserting user' });
+        }
+
+        res.status(201).send({ success: 'User registered successfully' });
+    });
+});
 
 
 app.listen(PORT, () => {

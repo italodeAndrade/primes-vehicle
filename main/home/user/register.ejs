@@ -8,15 +8,15 @@
 <body>
     <div id="register">
         <h1>Register</h1>
-        <form action="/register" method="POST">
+        <form id="form_user" method="POST">
             <input type="text" id="name" placeholder="Name" required>
             <input type="text" id="email" placeholder="email" required>
             <input type="text" id="phone" placeholder="phone">
             <input type="text" id="address" placeholder="address">
             <input type="text" id="cpf" placeholder="cpf" required>
             <input type="date" id="birth" placeholder="birth" required>
-            <input type="password" name="password" placeholder="insert your Password..." required>
-            <input type="password" name="password2" placeholder="repeat the password..." required>
+            <input type="password" id="password" placeholder="insert your Password..." required>
+            <input type="password" id="password2" placeholder="repeat the password..." required>
             <button type="submit">Register</button>
             <a href="login.ejs">already have account?</a>
         </form>
@@ -24,3 +24,40 @@
     </div>
 </body>
 </html>
+<script>
+    document.getElementById('form_user').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('name');
+        const email = document.getElementById('email');
+        const phone = document.getElementById('phone');
+        const address = document.getElementById('address');
+        const cpf = document.getElementById('cpf');
+        const birth = document.getElementById('birth');
+        const password = document.getElementById('password');
+        const password2 = document.getElementById('password2');
+
+        const dados = {
+            name: name.value,
+            email: email.value,
+            phone: phone.value,
+            address: address.value,
+            cpf: cpf.value,
+            birth: birth.value,
+            password: password.value
+        };
+
+        const response = await fetch('/register_user', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(dados)
+        });
+        const data = await response.json();
+        if(data.error){
+            alert(data.error);
+        }else{
+            window.location.href = '/login';
+        }
+    });
+</script>
