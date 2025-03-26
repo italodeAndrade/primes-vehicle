@@ -8,55 +8,47 @@
 <body>
     <div id="register">
         <h1>Register</h1>
-        <form id="form_user" method="POST">
+        <form id="form_user" enctype="multipart/form-data">
+            <input type="file" id="photo_user" accept="image/*" required>
             <input type="text" id="name" placeholder="Name" required>
-            <input type="text" id="email" placeholder="email" required>
-            <input type="text" id="phone" placeholder="phone">
-            <input type="text" id="address" placeholder="address">
-            <input type="text" id="cpf" placeholder="cpf" required>
-            <input type="date" id="birth" placeholder="birth" required>
-            <input type="password" id="password" placeholder="insert your Password..." required>
-            <input type="password" id="password2" placeholder="repeat the password..." required>
+            <input type="text" id="email" placeholder="Email" required>
+            <input type="text" id="phone" placeholder="Phone">
+            <input type="text" id="address" placeholder="Address">
+            <input type="text" id="cpf" placeholder="CPF" required>
+            <input type="date" id="birth" placeholder="Birth" required>
+            <input type="password" id="password" placeholder="Insert your Password..." required>
+            <input type="password" id="password2" placeholder="Repeat the password..." required>
             <button type="submit">Register</button>
-            <a href="login.ejs">already have account?</a>
+            <a href="login.ejs">Already have account?</a>
         </form>
-
     </div>
 </body>
 </html>
+
 <script>
     document.getElementById('form_user').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const name = document.getElementById('name');
-        const email = document.getElementById('email');
-        const phone = document.getElementById('phone');
-        const address = document.getElementById('address');
-        const cpf = document.getElementById('cpf');
-        const birth = document.getElementById('birth');
-        const password = document.getElementById('password');
-        const password2 = document.getElementById('password2');
 
-        const dados = {
-            name: name.value,
-            email: email.value,
-            phone: phone.value,
-            address: address.value,
-            cpf: cpf.value,
-            birth: birth.value,
-            password: password.value
-        };
+        // Cria um FormData para enviar os dados do formulário
+        const formData = new FormData();
+        formData.append('photo', document.getElementById('photo_user').files[0]);
+        formData.append('name', document.getElementById('name').value);
+        formData.append('email', document.getElementById('email').value);
+        formData.append('phone', document.getElementById('phone').value);
+        formData.append('address', document.getElementById('address').value);
+        formData.append('cpf', document.getElementById('cpf').value);
+        formData.append('birth', document.getElementById('birth').value);
+        formData.append('password', document.getElementById('password').value);
 
         const response = await fetch('/register_user', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(dados)
+            body: formData
         });
+
         const data = await response.json();
-        if(data.error){
+        if (data.error) {
             alert(data.error);
-        }else{
+        } else {
             window.location.href = '/login';
         }
     });

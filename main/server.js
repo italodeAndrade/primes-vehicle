@@ -6,12 +6,28 @@ const {mongo, mongoconn} = require('./db/conmongo');
 const { DEFAULT_MIN_VERSION } = require('tls');
 const PORT = 3000;
 const cloudinary = require('./db/cloud.js');
+const fileUpload = require('express-fileupload');
+const session = require('express-session');
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'home'));
 app.use(express.static(path.join(__dirname, 'features')));
 app.use(express.static(path.join(__dirname, 'home')));
 app.use(express.json());
+
+app.use(fileUpload({
+    useTempFiles: true, 
+    tempFileDir: '/tmp/' 
+}));
+
+
+app.use(session({
+    secret: 'meu-segredo', // Chave secreta para assinar o ID da sessão
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false } // Use 'secure: true' em produção com HTTPS
+  }));
+
 
 require('dotenv').config();
 mongoconn();
@@ -109,19 +125,60 @@ app.get('/load_dt/:id', (req, res) => {
     });
 });
 
+app.get('login_user', (req, res) => {
+    const { email, password } = req.body;
+    const query = 'SELECT * FROM users WHERE email = $1 AND password = $2';
+    db.query(query, [email, password], (err, result) => {
+        if (err) {
+            console.error('Error fetching user:', err);
+            return res.status(500).send({ error: 'Error fetching user' });
+        }
+
+        if (result.rows.length === 0) {
+            return res.status(404).send({ error: 'User not found' });
+        }
+
+        req.session.user = result.rows[0];
+        res.status(200).send({ success: 'User logged in successfully' });
+    });
+
+});
+
 app.post('/register_user', (req, res) => {
     const { name, dt_birth, cpf, address, phone, email, password } = req.body;
-    const query = 'INSERT INTO users (nick, dt_birth, cpf, address, phone, email, password) VALUES ($1, $2, $3, $4, $5, $6, $7)';
-    db.query(query, [name, dt_birth, cpf, address, phone, email, password], (err) => {
+
+    const query = 'INSERT INTO users (nick, dt_birth, cpf, address, phone, email, password) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id';
+    
+    db.query(query, [name, dt_birth, cpf, address, phone, email, password], async (err, result) => {
         if (err) {
             console.error('Error inserting user:', err);
             return res.status(500).send({ error: 'Error inserting user' });
         }
 
+        const userId = result.rows[0].id; 
+       
+        const photo = req.files.photo; 
+        async function uploadPhoto(photo) {
+            try {
+                const result = await cloudinary.uploader.upload(photo.tempFilePath, {
+                    folder: 'users',
+                    public_id: `user_${userId}`,  
+                    tags: [`${name}${userId}`]  
+                });
+
+                console.log(result);
+            } catch (error) {
+                console.error('Error uploading photo:', error);
+            }
+        }
+
+        if (photo) {
+            await uploadPhoto(photo);
+        }
+
         res.status(201).send({ success: 'User registered successfully' });
     });
 });
-
 
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);

@@ -15,6 +15,8 @@
     "dotenv": "^16.4.7",
     "ejs": "^3.1.10",
     "express": "^4.21.2",
+    "express-fileupload": "^1.5.1",
+    "express-session": "^1.18.1",
     "main": "file:",
     "mongoose": "^8.10.1",
     "pg": "^8.14.1",
