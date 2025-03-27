@@ -116,7 +116,7 @@
 </style>
 <header>
   <nav>
-    <a class="logo" href="">primes vehicle</a>
+    <a class="logo" href="../">primes vehicle</a>
     <div class="mobile-menu">
       <div class="line1"></div>
       <div class="line2"></div>
@@ -124,15 +124,43 @@
       <div class="line4"><img src="" alt=""></div>
     </div>
     <ul class="nav-list">
-      <li><a href="#">profile</a></li>
-      <li><a href="#">messages</a></li>
-      <li><a href="#">likes</a></li>
-      <li><a href="#">contact us</a> </li>
+      <ul class="nav-list">
+        <% if (session && session.user) { %>
+          <li><a href="/profile/<%= session.user.id %>">Profile</a></li>
+          <li><a href="/logout">Logout</a></li>
+        <% } else { %>
+          <li><a href="/login">Login</a></li>
+          <li><a href="/register">Register</a></li>
+        <% } %>
+        <li><a href="#">Home</a></li>
+        <li><a href="#">Messages</a></li>
+        <li><a href="#">Likes</a></li>
+        <li><a href="#">Contact Us</a></li>
+      </ul>
+      
     </ul>
   </nav>
 </header>
 
 <script>
+  window.onload=function(){
+    fetch('/load_user')
+    .then(response => response.json())
+    .then(data => {
+      const user = document.getElementById('user');
+      user.innerHTML = ''; 
+      user.innerHTML = `
+        <p>Nome: ${data.name}</p>
+        <p>Email: ${data.email}</p>
+        <p>Telefone: ${data.phone}</p>
+        <p>Endereço: ${data.address}</p>
+      `;
+    })
+    .catch(err => console.error('Error fetching user:', err));
+  }
+  function load_user(){
+
+  };
   class MobileNavbar {
     constructor(mobileMenu, navList, navLinks) {
       this.mobileMenu = document.querySelector(mobileMenu);
