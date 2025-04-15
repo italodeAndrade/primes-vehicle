@@ -1,6 +1,7 @@
 
 
 <style>
+  
   * {
     margin: 0;
     padding: 0;
@@ -116,7 +117,7 @@
 </style>
 <header>
   <nav>
-    <a class="logo" href="../">primes vehicle</a>
+    <a class="logo" href="/">primes vehicle</a>
     <div class="mobile-menu">
       <div class="line1"></div>
       <div class="line2"></div>
@@ -124,21 +125,17 @@
       <div class="line4"><img src="" alt=""></div>
     </div>
     <ul class="nav-list">
-      <ul class="nav-list">
-        <% if (session && session.user) { %>
-          <li><a href="/profile/<%= session.user.id %>">Profile</a></li>
-          <li><a href="/logout">Logout</a></li>
-        <% } else { %>
-          <li><a href="/login">Login</a></li>
-          <li><a href="/register">Register</a></li>
-        <% } %>
-        <li><a href="#">Home</a></li>
-        <li><a href="#">Messages</a></li>
-        <li><a href="#">Likes</a></li>
-        <li><a href="#">Contact Us</a></li>
-      </ul>
-      
-    </ul>
+      <% if (session && session.user) { %>
+        <li><a href="/profile">Profile</a></li>
+        <li><a href="/logout">Logout</a></li>
+      <% } else { %>
+        <li><a href="/login">Login</a></li>
+        <li><a href="/register">Register</a></li>
+      <% } %>
+      <li><a href="#">Messages</a></li>
+      <li><a href="#">Likes</a></li>
+      <li><a href="#">Contact Us</a></li>
+    </ul>    
   </nav>
 </header>
 

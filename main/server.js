@@ -37,6 +37,11 @@ app.use((req, res, next) => {
 require('dotenv').config();
 mongoconn();
             //rotas
+    
+app.get('/', (req, res) => {
+    res.render("main")
+});
+
 app.get('/login', (req,res)=> {
     res.render('user/login.ejs')
 })
@@ -45,9 +50,34 @@ app.get('/register', (req,res)=> {
     res.render('user/register.ejs')
 })
 
-app.get('/', (req, res) => {
-    res.render("main")
+app.get('/profile', async (req, res) => {
+    if (!req.session.user) {
+        return res.redirect('/login');
+    }
+
+    const userId = req.session.user.id;
+    const query = 'SELECT * FROM users WHERE id = $1';
+
+    try {
+        const result = await db.query(query, [userId]);
+        if (result.rows.length === 0) {
+            return res.status(404).send({ error: 'User not found' });
+        }
+
+        const user = result.rows[0];
+        const tag = `${user.nick}${user.id}`;
+        const cloudinaryResponse = await cloudinary.api.resources_by_tag(tag, { max_results: 1 });
+        
+        const userImages = cloudinaryResponse.resources.map(resource => resource.secure_url);
+
+        user.images = userImages;
+        res.render('user/profile', { user });
+    } catch (error) {
+        console.error('Error loading profile:', error);
+        return res.status(500).send({ error: 'Error loading profile' });
+    }
 });
+
            //rotas
 
 app.get('/load_cars', async (req, res) => {
@@ -160,10 +190,22 @@ app.post('/login_user', async (req, res) => {
         photo: userImage && userImage.length > 0 ? userImage[0] : null
       };
       
-      res.status(200).send({ success: 'User logged in successfully' });
+      res.redirect('/');
     });
   });
   
+app.get('/logout', (req, res) => {  
+    req.session.destroy(err => {
+        if (err) {
+
+            return res.status(500).send('Erro ao encerrar a sessão');
+        }
+    res.clearCookie('connect.sid');
+    res.redirect('/')
+    });
+});
+
+
 app.post('/register_user', (req, res) => {
     const { name, dt_birth, cpf, address, phone, email, password } = req.body;
 
@@ -196,34 +238,8 @@ app.post('/register_user', (req, res) => {
             await uploadPhoto(photo);
         }
 
-        res.status(201).send({ success: 'User registered successfully' });
+        res.redirect('/')
     });
-});
-
-app.get("/profile/:id", async (req, res) => {
-    const id = req.params.id;
-    const query = 'SELECT * FROM users WHERE id = $1';
-    if (req.session.user) {  
-        try {
-            const result = await db.query(query, [id]);
-            if (result.rows.length === 0) {
-                return res.status(404).send({ error: 'User not found' });
-            }
-            const userFromDB = result.rows[0]; 
-            const cloudinaryResponse = await cloudinary.api.resources_by_tag(userFromDB.id.toString(), { max_results: 1 });
-            const userImages = cloudinaryResponse.resources.map(resource => resource.secure_url);
-
-            userFromDB.images = userImages; 
-            res.render('user/profile', { user: userFromDB });
-        } 
-        catch (error) {
-            console.error('Error fetching user or images:', error);
-            return res.status(500).send({ error: 'Error fetching user or images' });
-        }
-    }
-    else {
-        res.redirect('/login');  
-    }
 });
 
 app.listen(PORT, () => {

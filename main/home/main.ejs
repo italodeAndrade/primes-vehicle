@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
     <link rel="stylesheet" href="mnstl.css">
-    <%- include('../features/index') %>
+    
 </head>
 <body>
+    <div id="navbar"> <%- include('../features/index') %></div>
     <div id="announcment1" ></div>
     <div id="announcment2" ></div>
     <div id="cars_container"></div>
@@ -57,6 +58,14 @@
 </script>
 
 <style>
+
+    #navbar {
+        position: sticky;   
+        top: 0; 
+        z-index: 1000;
+      }
+      
+
     .car-item {
         display: flex;
         justify-content: space-between;
