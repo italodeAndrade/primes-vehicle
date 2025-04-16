@@ -1,0 +1,25 @@
+CREATE TABLE cars (
+    id SERIAL PRIMARY KEY,
+    model VARCHAR(80),
+    brand VARCHAR(80),
+    year INTEGER,
+    km_driven DOUBLE PRECISION,
+    color VARCHAR(50),
+    switch BOOLEAN,
+    nick VARCHAR(500),
+    price NUMERIC(10, 2)
+);
+
+
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    nick VARCHAR(80),
+    dt_birth DATE,
+    cpf VARCHAR(14),
+    address VARCHAR(255),
+    phone VARCHAR(15),
+    email VARCHAR(100),
+    password VARCHAR(100),
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
