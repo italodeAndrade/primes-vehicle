@@ -125,17 +125,21 @@
       <div class="line4"><img src="" alt=""></div>
     </div>
     <ul class="nav-list">
-      <% if (session && session.user) { %>
+      <% if (session && session.user && session.user.adm === true) { %>
+
+        <li><a href="/admin">Admin</a></li>
+        <li><a href="/logout">Logout</a></li>
+      <% } else if (session && session.user) { %>
         <li><a href="/profile">Profile</a></li>
         <li><a href="/logout">Logout</a></li>
       <% } else { %>
         <li><a href="/login">Login</a></li>
-        <li><a href="/register">Register</a></li>
       <% } %>
       <li><a href="#">Messages</a></li>
       <li><a href="#">Likes</a></li>
       <li><a href="#">Contact Us</a></li>
-    </ul>    
+    </ul>
+        
   </nav>
 </header>
 
@@ -155,9 +159,6 @@
     })
     .catch(err => console.error('Error fetching user:', err));
   }
-  function load_user(){
-
-  };
   class MobileNavbar {
     constructor(mobileMenu, navList, navLinks) {
       this.mobileMenu = document.querySelector(mobileMenu);

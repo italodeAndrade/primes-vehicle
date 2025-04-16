@@ -78,6 +78,17 @@ app.get('/profile', async (req, res) => {
     }
 });
 
+app.get('/admin', (req, res) => {
+    if (!req.session.user || !req.session.user.adm) {
+        return res.redirect('/login');
+    }
+    res.render('adm/admin_mng.ejs', { user: req.session.user });
+});
+
+app.get('/login_adm', (req, res) => {
+    res.render('adm/login_adm.ejs')
+});
+
            //rotas
 
 app.get('/load_cars', async (req, res) => {
@@ -176,7 +187,6 @@ app.post('/login_user', async (req, res) => {
       
       let userImage;
       try {
-        // Supondo que você queira buscar a imagem usando o ID do usuário
         const cloudinaryResponse = await cloudinary.api.resources_by_tag(result.rows[0].id.toString(), { max_results: 1 });
         userImage = cloudinaryResponse.resources.map(resource => resource.secure_url);
       } catch (error) {
@@ -193,6 +203,29 @@ app.post('/login_user', async (req, res) => {
       res.redirect('/');
     });
   });
+
+app.post('/login_admin', (req, res) => {
+    const { login, password } = req.body;
+    const query = 'SELECT * FROM admin WHERE login = $1 AND senha = $2';
+    
+    db.query(query, [login, password], (err, result) => {
+        if (err) {
+            console.error('Error fetching admin:', err);
+            return res.status(500).send({ error: 'Error fetching admin' });
+        }
+        if (result.rows.length === 0) {
+            return res.status(404).send({ error: 'Admin not found' });
+        }
+        
+        req.session.user = {
+            id: result.rows[0].id,
+            name: result.rows[0].login,
+            adm: true
+        };
+        
+        res.redirect('/');
+    });
+});
   
 app.get('/logout', (req, res) => {  
     req.session.destroy(err => {
