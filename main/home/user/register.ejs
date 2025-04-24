@@ -16,57 +16,47 @@
     <div id="navbar"> <%- include('../../features/index') %></div>
     <div id="register">
         <h1>Register</h1>
-        <form id="form_user" action="/register_user" method="post" enctype="multipart/form-data">
-            <input type="file" id="photo_user" name="photo_user" accept="image/*" required>
-            <input type="text" name="name" placeholder="Name" required>
-            <input type="text" name="email" placeholder="Email" required>
-            <input type="text" name="phone" placeholder="Phone">
-            <input type="text" name="address" placeholder="Address">
-            <input type="text" name="cpf" placeholder="CPF" required>
-            <input type="date" name="birth" required>
-            <input type="password" id="password" name="password" placeholder="Insert your Password..." required>
-            <input type="password" id="password2" placeholder="Repeat the password..." required>
-            <button type="submit">Register</button>
-          </form>
+        <form id="form_user" enctype="multipart/form-data">
+          <input type="file" id="photo_user" name="photo" accept="image/*" required>
+          <input type="text" id="name" name="name" placeholder="Name" required>
+          <input type="text" id="email" name="email" placeholder="Email" required>
+          <input type="text" id="phone" name="phone" placeholder="Phone">
+          <input type="text" id="address" name="address" placeholder="Address">
+          <input type="text" id="cpf" name="cpf" placeholder="CPF" required>
+          <input type="date" id="birth" name="dt_birth" placeholder="Birth" required>
+          <input type="password" id="password" name="password" placeholder="Insert your Password..." required>
+          <input type="password" id="password2" name="password2" placeholder="Repeat the password..." required>
+          <button type="submit">Register</button>
+          <a href="/login">Already have account?</a>
+        </form>        
     </div>
 </body>
 </html>
 
 <script>
-    const form = document.getElementById('form_user');
+  document.getElementById('form_user').addEventListener('submit', async (e) => {
+      e.preventDefault();
   
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault(); // Impede o envio padrão
-  
-      const password = form.password.value;
-      const password2 = document.getElementById('password2').value;
-  
-      if (password !== password2) {
-        alert("Passwords do not match!");
-        return;
-      }
-  
-      const formData = new FormData(form); // Já coleta todos os dados do formulário
+      const form = document.getElementById('form_user');
+      const formData = new FormData(form);
   
       try {
-        const response = await fetch(form.action, {
-          method: 'POST',
-          body: formData
-        });
+          const response = await fetch('/register_user', {
+              method: 'POST',
+              body: formData
+          });
   
-        const data = await response.json();
+          const data = await response.json();
   
-        if (data.error) {
-          alert(`${data.error}`);
-        } else {
-          alert("Usuário cadastrado com sucesso!");
-          window.location.href = '/login'; // redireciona só se sucesso
-        }
-  
-      } catch (err) {
-        console.error("Erro na requisição:", err);
-        alert("Erro interno ao registrar. Tente novamente.");
+          if (data.error) {
+              alert(data.error);
+          } else {
+              window.location.href = '/login'; // Agora isso vai funcionar ✅
+          }
+      } catch (error) {
+          console.error('Erro no registro:', error);
+          alert('Erro inesperado ao registrar usuário');
       }
-    });
+  });
   </script>
   

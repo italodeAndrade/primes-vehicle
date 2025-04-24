@@ -280,7 +280,6 @@ app.get('/logout', (req, res) => {
     });
 });
 
-
 app.post('/register_user', (req, res) => {
     const { name, dt_birth, cpf, address, phone, email, password } = req.body;
 
@@ -312,11 +311,9 @@ app.post('/register_user', (req, res) => {
         if (photo) {
             await uploadPhoto(photo);
         }
-
-        res.redirect('/')
     });
+    return res.json({success: true});
 });
-
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
 
