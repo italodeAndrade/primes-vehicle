@@ -23,3 +23,19 @@ CREATE TABLE users (
     created_at TIMESTAMP,
     updated_at TIMESTAMP
 );
+
+-- Inserindo dados na tabela 'cars'
+INSERT INTO cars (model, brand, year, km_driven, color, switch, nick, price) 
+VALUES ('Civic', 'Honda', 2020, 15000, 'Preto', TRUE, 'CivicTurbo', 85000.00);
+
+INSERT INTO cars (model, brand, year, km_driven, color, switch, nick, price) 
+VALUES ('Corolla', 'Toyota', 2019, 20000, 'Branco', FALSE, 'CorollaGLI', 79000.00);
+
+INSERT INTO cars (model, brand, year, km_driven, color, switch, nick, price) 
+VALUES ('Gol', 'Volkswagen', 2018, 35000, 'Vermelho', TRUE, 'GolSport', 45000.00);
+
+INSERT INTO cars (model, brand, year, km_driven, color, switch, nick, price) 
+VALUES ('Fiesta', 'Ford', 2017, 50000, 'Azul', TRUE, 'FiestaFast', 38000.00);
+
+INSERT INTO cars (model, brand, year, km_driven, color, switch, nick, price) 
+VALUES ('Onix', 'Chevrolet', 2021, 8000, 'Prata', TRUE, 'OnixPlus', 92000.00);
