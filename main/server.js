@@ -96,7 +96,7 @@ app.get('/load_cars', async (req, res) => {
     
     db.query(query, async (err, results) => {
         if (err) {
-            console.error('Error fetching cars:', err);
+            console.log('Error fetching cars:', err);
             return res.status(500).send('Error fetching cars');
         }
 
@@ -138,6 +138,48 @@ app.get('/load_cars', async (req, res) => {
         }));
 
         res.json(formattedCars);
+    });
+});
+
+app.get('/load_users', async (req, res) => {
+    const query = 'SELECT nick , phone, email, cpf, address, created_at, updated_at  FROM users';
+        db.query(query, async (err, results) => {
+            if (err){
+                console.log('Error fetching users:', err);
+                return res.status(500).send('Error fetching users');
+            }
+            const users = results.rows;
+            const formattedUsers = await Promise.all(users.map(async user => {
+                try {
+                    const cloudinaryResponse = await cloudinary.api.resources_by_tag(user.nick, { max_results: 1 });
+                    const userImage = cloudinaryResponse.resources.map(resource => resource.secure_url);
+
+                    return {
+                        nick: user.nick,
+                        phone: user.phone,
+                        email: user.email,
+                        cpf: user.cpf,
+                        adress: user.adress,
+                        created_at: user.created_at,
+                        updated_at: user.updated_at,
+                        images: userImage
+                    };
+                } 
+            catch (error) {
+                console.error(`Error fetching images for user ${user.nick}:`, error);
+                return {
+                    nick: user.nick,
+                    phone: user.phone,
+                    email: user.email,
+                    cpf: user.cpf,
+                    adress: user.adress,
+                    created_at: user.created_at,
+                    updated_at: user.updated_at,
+                    images: [] 
+                };
+            };
+        }));
+        res.json(formattedUsers);
     });
 });
 

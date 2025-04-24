@@ -12,17 +12,41 @@
         top: 0; 
         z-index: 1000;
       }
+    .container-cars {
+        border-radius: 30px;
+        color: white;
+        display: grid;
+        place-items: center;
+        justify-content: space-evenly;
+        background-color: rgb(54, 3, 3);
+        max-width: 1200px;
+        max-height: 700px;
+        overflow: auto;
+        }
+    .container-users {
+        color: white;
+        display: flex;
+        justify-content: space-around;
+        background-color: rgb(38, 3, 54);
+        max-width: 2000px;
+    }
+
 </style>
 <body>
+    <img src="" alt="">
     <div id="navbar"> <%- include('../../features/index') %></div>
     <div class="container-cars">
         <h1>Carros</h1>
         <button onclick="load_cars()">Atualizar</button>
-        <button onclick="window.location.href='/add_car'">Adicionar Carro</button>
+        <button>Add Carro</button>
         <div id="cars_container"></div>
 
     </div>
     <div class="container-users">
+        <h1>usuários</h1>
+        <button onclick="load_users()">atualizar</button>
+        <button >add user</button>
+        <div id="users_container"></div>
 
     </div>
 </body>
@@ -56,7 +80,7 @@
                         ${car.images.length > 0 ? `<img src="${car.images[0]}" alt="Imagem do carro ${car.model}" style="width: 200px; height: auto;" />` : '<p>Sem imagem disponível</p>'}
                     </div>
 
-                    <button onclick="load_detail(${car.id})">Ver Detalhes</button>
+                    <button onclick="window.location.href = '/load_dt/${car.id}'">Ver Detalhes</button>
                     <button onclick="delete_car(${car.id})">Deletar</button>
                     <button onclick="edit_car(${car.id})">Editar</button>
                 `;
@@ -65,4 +89,33 @@
         })
         .catch(err => console.error('Error fetching cars:', err));  
     }
+    
+    function load_users() {
+    fetch('/load_users')
+    .then(response => response.json())
+    .then(data => {
+        const body_users = document.getElementById('users_container');
+        body_users.innerHTML = '';  
+
+        data.forEach(user => {
+            const user_container = document.createElement('div'); 
+            user_container.classList.add('user-item');
+
+            user_container.innerHTML = `
+                <div class="user-details">
+                    <p>Nome: ${user.nick}</p>
+                    <p>Email: ${user.email}</p>
+                    <p>Telefone: ${user.phone}</p>
+                    <p>CPF: ${user.cpf}</p>
+                    <img src="${user.image}" alt="">
+                </div>
+                <button onclick="delete_user(${user.id})">Deletar</button>
+            `;
+
+            body_users.appendChild(user_container); 
+        });
+    })
+    .catch(err => console.error('Error fetching users:', err));  
+}
+
 </script>
