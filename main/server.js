@@ -318,13 +318,13 @@ app.get('/load_users', async (req, res) => {
             catch (error) {
                 console.error(`Error fetching images for user ${user.nick}:`, error);
                 return {
-                    nick: user.nick,
-                    phone: user.phone,
+                    nick: user.nome,
+                    phone: user.telefone,
                     email: user.email,
                     cpf: user.cpf,
-                    adress: user.adress,
-                    created_at: user.created_at,
-                    updated_at: user.updated_at,
+                    adress: user.endereco,
+                    created_at: user.criado,
+                    updated_at: user.atualizado,
                     images: [] 
                 };
             };

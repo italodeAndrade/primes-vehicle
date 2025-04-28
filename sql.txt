@@ -1,41 +1,50 @@
-CREATE TABLE cars (
+-- Criação da tabela de usuários
+CREATE TABLE usuarios (
     id SERIAL PRIMARY KEY,
-    model VARCHAR(80),
-    brand VARCHAR(80),
-    year INTEGER,
-    km_driven DOUBLE PRECISION,
-    color VARCHAR(50),
-    switch BOOLEAN,
-    nick VARCHAR(500),
-    price NUMERIC(10, 2)
+    nome VARCHAR(80) NOT NULL,
+    dt_nascimento DATE NOT NULL,
+    cpf VARCHAR(14) UNIQUE NOT NULL,
+    endereco VARCHAR(255),
+    telefone VARCHAR(15) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    senha VARCHAR(100) NOT NULL,
+    criado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    atualizado TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 
-CREATE TABLE users (
+
+-- Criação da tabela de carros
+CREATE TABLE carros (
     id SERIAL PRIMARY KEY,
-    nick VARCHAR(80),
-    dt_birth DATE,
-    cpf VARCHAR(14),
-    address VARCHAR(255),
-    phone VARCHAR(15),
-    email VARCHAR(100),
-    password VARCHAR(100),
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP
+    modelo VARCHAR(80) NOT NULL,
+    marca VARCHAR(80) NOT NULL,
+    ano_fabricacao INTEGER NOT NULL,
+    quilometragem DOUBLE PRECISION CHECK (quilometragem >= 0),
+    cor VARCHAR(50) NOT NULL,
+    automatico BOOLEAN DEFAULT FALSE,
+    apelido_vendedor VARCHAR(500),
+    preco NUMERIC(10, 2) CHECK (preco > 0),
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Inserindo dados na tabela 'cars'
-INSERT INTO cars (model, brand, year, km_driven, color, switch, nick, price) 
-VALUES ('Civic', 'Honda', 2020, 15000, 'Preto', TRUE, 'CivicTurbo', 85000.00);
+COMMENT ON COLUMN carros.automatico IS 'Indica se o carro é automático (true) ou manual (false)';
+COMMENT ON COLUMN carros.apelido_vendedor IS 'Identificação do vendedor no sistema';
 
-INSERT INTO cars (model, brand, year, km_driven, color, switch, nick, price) 
-VALUES ('Corolla', 'Toyota', 2019, 20000, 'Branco', FALSE, 'CorollaGLI', 79000.00);
+-- Índices para otimização
+CREATE INDEX idx_carros_marca ON carros(marca);
+CREATE INDEX idx_carros_preco ON carros(preco);
+CREATE INDEX idx_carros_ano ON carros(ano_fabricacao);
+CREATE INDEX idx_carros_quilometragem ON carros(quilometragem);
+CREATE INDEX idx_usuarios_email ON usuarios(email);
+CREATE INDEX idx_usuarios_cpf ON usuarios(cpf);
 
-INSERT INTO cars (model, brand, year, km_driven, color, switch, nick, price) 
-VALUES ('Gol', 'Volkswagen', 2018, 35000, 'Vermelho', TRUE, 'GolSport', 45000.00);
-
-INSERT INTO cars (model, brand, year, km_driven, color, switch, nick, price) 
-VALUES ('Fiesta', 'Ford', 2017, 50000, 'Azul', TRUE, 'FiestaFast', 38000.00);
-
-INSERT INTO cars (model, brand, year, km_driven, color, switch, nick, price) 
-VALUES ('Onix', 'Chevrolet', 2021, 8000, 'Prata', TRUE, 'OnixPlus', 92000.00);
+-- Inserção de dados de exemplo
+INSERT INTO carros (modelo, marca, ano_fabricacao, quilometragem, cor, automatico, apelido_vendedor, preco) 
+VALUES 
+('Civic', 'Honda', 2020, 15000, 'Preto', TRUE, 'CivicTurbo', 85000.00),
+('Corolla', 'Toyota', 2019, 20000, 'Branco', FALSE, 'CorollaGLI', 79000.00),
+('Gol', 'Volkswagen', 2018, 35000, 'Vermelho', TRUE, 'GolSport', 45000.00),
+('Fiesta', 'Ford', 2017, 50000, 'Azul', TRUE, 'FiestaFast', 38000.00),
+('Onix', 'Chevrolet', 2021, 8000, 'Prata', TRUE, 'OnixPlus', 92000.00);
