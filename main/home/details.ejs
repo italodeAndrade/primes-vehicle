@@ -1,47 +1,101 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Car Details - <%= car.model %></title>
+    <title>Detalhes do Carro - <%= car.model %></title>
     <%- include('../features/index.ejs') %>
+    <style>
+        .car_container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+        .car-photos {
+            display: grid;
+            gap: 10px;
+        }
+        #main_photo img {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        #oth_photo {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+        }
+        #oth_photo img {
+            height: 100px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .car_info div {
+            margin: 15px 0;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+        }
+    </style>
 </head>
 <body>
     <div class="car_container">
-
         <div class="car-photos">
             <div id="main_photo">
-                <!-- Exibe a primeira imagem como a imagem principal -->
                 <% if (car.images.length > 0) { %>
-                    <img src="<%= car.images[0] %>" alt="Main photo of <%= car.model %>" style="width: 300px; height: auto;" />
+                    <img src="<%= car.images[0] %>" alt="Foto principal do <%= car.model %>">
                 <% } else { %>
-                    <p>Imagem não disponível</p>
+                    <p>Sem imagem disponível</p>
                 <% } %>
             </div>
 
             <div id="oth_photo">
                 <% car.images.slice(1).forEach(function(image) { %>
-                    <img src="<%= image %>" alt="Other photo of <%= car.model %>" style="width: 100px; height: auto;" />
+                    <img src="<%= image %>" alt="Outra foto do <%= car.model %>" class="thumbnail">
                 <% }); %>
             </div>
         </div>
 
-        <h1><%= car.model %></h1>  
-        <h2><%= car.brand %></h2>  
-        <p>Year: <%= car.year %></p>     
-        
-        <label for="km">KM Driven:</label>
-        <p id="km"><%= car.km_driven %></p>
+        <div class="car_info">
+            <h1><%= car.brand %> <%= car.model %></h1>
+            
+            <div>
+                <strong>Ano:</strong>
+                <span><%= car.year %></span>
+            </div>
 
-        <label for="color">Color:</label>
-        <p id="color"><%= car.color %></p>  
+            <div>
+                <strong>Quilometragem:</strong>
+                <span><%= car.km_driven.toLocaleString('pt-BR') %> km</span>
+            </div>
 
-        <label for="swt">Switchable:</label>
-        <p id="swt"><%= car.switch === 1 ? 'Yes' : 'No' %></p> 
+            <div>
+                <strong>Cor:</strong>
+                <span><%= car.color %></span>
+            </div>
 
-        <button><%= car.price %></button>
-        <button>Schedule a Visit</button>
-        <button>WhatsApp Chat</button>
+            <div>
+                <strong>Câmbio:</strong>
+                <span><%= car.switch ? 'Automático' : 'Manual' %></span>
+            </div>
+
+            <div class="price">
+                <strong>Preço:</strong>
+                <span class="price">R$ <%= car.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+            </div>
+
+            <div class="actions">
+                <button class="visit-button">Agendar Visita</button>
+                <button class="whatsapp-button">
+                    <img src="" alt="WhatsApp" style="height: 20px;">
+                    Falar com Vendedor
+                </button>
+            </div>
+        </div>
     </div>
 </body>
 </html>

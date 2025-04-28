@@ -36,72 +36,55 @@ app.use((req, res, next) => {
 
 require('dotenv').config();
 mongoconn();
-            //rotas
-    
-app.get('/', (req, res) => {
-    res.render("main")
-});
 
-app.get('/login', (req,res)=> {
-    res.render('user/login.ejs')
-})
+//rota    
+    app.get('/', (req, res) => {
+        res.render("main")
+    });
 
-app.get('/register', (req,res)=> {
-    res.render('user/register.ejs')
-})
+    app.get('/login', (req,res)=> {
+        res.render('user/login.ejs')
+    })
 
-app.get('/profile', async (req, res) => {
-    if (!req.session.user) {
-        return res.redirect('/login');
-    }
+    app.get('/register', (req,res)=> {
+        res.render('user/register.ejs')
+    })
 
-    const userId = req.session.user.id;
-    const query = 'SELECT * FROM users WHERE id = $1';
-
-    try {
-        const result = await db.query(query, [userId]);
-        if (result.rows.length === 0) {
-            return res.status(404).send({ error: 'User not found' });
+    app.get('/admin', (req, res) => {
+        if (!req.session.user || !req.session.user.adm) {
+            return res.redirect('/login');
         }
+        res.render('adm/admin_mng.ejs', { user: req.session.user });
+    });
 
-        const user = result.rows[0];
-        const tag = `${user.nick}${user.id}`;
-        const cloudinaryResponse = await cloudinary.api.resources_by_tag(tag, { max_results: 1 });
-        
-        const userImages = cloudinaryResponse.resources.map(resource => resource.secure_url);
+    app.get('/login_adm', (req, res) => {
+        res.render('adm/login_adm.ejs')
+    });
+//rotas
 
-        user.images = userImages;
-        res.render('user/profile', { user });
-    } catch (error) {
-        console.error('Error loading profile:', error);
-        return res.status(500).send({ error: 'Error loading profile' });
-    }
-});
 
-app.get('/admin', (req, res) => {
-    if (!req.session.user || !req.session.user.adm) {
-        return res.redirect('/login');
-    }
-    res.render('adm/admin_mng.ejs', { user: req.session.user });
-});
-
-app.get('/login_adm', (req, res) => {
-    res.render('adm/login_adm.ejs')
-});
-
-           //rotas
-
+// comandos locais
 app.get('/load_cars', async (req, res) => {
-    const query = 'SELECT price, year, id, model, brand, km_driven, color, switch, nick FROM cars';
-    
+    const query = `
+        SELECT 
+            preco AS price,
+            ano_fabricacao AS year,
+            id,
+            modelo AS model,
+            marca AS brand,
+            quilometragem AS km_driven,
+            cor AS color,
+            automatico AS switch,
+            apelido_vendedor AS nick
+        FROM carros`;
+
     db.query(query, async (err, results) => {
         if (err) {
-            console.log('Error fetching cars:', err);
-            return res.status(500).send('Error fetching cars');
+            console.log('Erro ao buscar carros:', err);
+            return res.status(500).send('Erro ao buscar carros');
         }
 
-        // Acessando 'rows' para obter os resultados da consulta
-        const cars = results.rows; 
+        const cars = results.rows;
 
         const formattedCars = await Promise.all(cars.map(async car => {
             try {
@@ -118,10 +101,10 @@ app.get('/load_cars', async (req, res) => {
                     color: car.color,
                     switch: car.switch,
                     nick: car.nick,
-                    images: carImages 
+                    images: carImages
                 };
             } catch (error) {
-                console.error(`Error fetching images for car ID ${car.id}:`, error);
+                console.error(`Erro buscando imagens do carro ID ${car.id}:`, error);
                 return {
                     price: car.price,
                     year: car.year,
@@ -132,7 +115,7 @@ app.get('/load_cars', async (req, res) => {
                     color: car.color,
                     switch: car.switch,
                     nick: car.nick,
-                    images: [] 
+                    images: []
                 };
             }
         }));
@@ -141,82 +124,45 @@ app.get('/load_cars', async (req, res) => {
     });
 });
 
-app.get('/load_users', async (req, res) => {
-    const query = 'SELECT nick , phone, email, cpf, address, created_at, updated_at  FROM users';
-        db.query(query, async (err, results) => {
-            if (err){
-                console.log('Error fetching users:', err);
-                return res.status(500).send('Error fetching users');
-            }
-            const users = results.rows;
-            const formattedUsers = await Promise.all(users.map(async user => {
-                try {
-                    const cloudinaryResponse = await cloudinary.api.resources_by_tag(user.nick, { max_results: 1 });
-                    const userImage = cloudinaryResponse.resources.map(resource => resource.secure_url);
-
-                    return {
-                        nick: user.nick,
-                        phone: user.phone,
-                        email: user.email,
-                        cpf: user.cpf,
-                        adress: user.adress,
-                        created_at: user.created_at,
-                        updated_at: user.updated_at,
-                        images: userImage
-                    };
-                } 
-            catch (error) {
-                console.error(`Error fetching images for user ${user.nick}:`, error);
-                return {
-                    nick: user.nick,
-                    phone: user.phone,
-                    email: user.email,
-                    cpf: user.cpf,
-                    adress: user.adress,
-                    created_at: user.created_at,
-                    updated_at: user.updated_at,
-                    images: [] 
-                };
-            };
-        }));
-        res.json(formattedUsers);
-    });
-});
-
 app.get('/load_dt/:id', (req, res) => {
     const id = req.params.id;
-    const query = `SELECT * FROM cars WHERE id = $1`;
-
-    db.query(query, [id], async  (err, results) => {
+    const query = `
+        SELECT id,modelo AS model,marca AS brand,ano_fabricacao AS year,quilometragem AS km_driven,cor AS color,automatico AS switch,apelido_vendedor AS nick,preco AS price FROM carros  WHERE id = $1`;
+    db.query(query, [id], async (err, results) => {
         if (err) {
-            console.error('Error fetching car details:', err);
-            return res.status(500).send('Error fetching car details');
+            console.error('Erro ao buscar detalhes do carro:', err);
+            return res.status(500).send('Erro ao buscar detalhes do carro');
         }
 
-        if (results.length === 0) {
-            return res.status(404).send('Car not found');
+        if (!results.rows || results.rows.length === 0) {
+            return res.status(404).send('Carro não encontrado');
         }
 
         const car = results.rows[0];
 
         try {
-            const cloudinaryResponse = await cloudinary.api.resources_by_tag(car.id.toString(), { max_results: 10 });
-            const carImages = cloudinaryResponse.resources.map(resource => resource.secure_url);
-
-            car.images = carImages; 
-
-            res.render('details', { car });
+            const respostaCloudinary = await cloudinary.api.resources_by_tag(car.id.toString(), { 
+                max_results: 10,
+                resource_type: 'image'
+            });
+            
+            car.images = respostaCloudinary.resources?.map(recurso => recurso.secure_url) || [];
+            
         } catch (error) {
-            console.error(`Error fetching images for car ID ${car.id}:`, error);
-            car.images = []; 
-            res.render('details', { car });
+            console.error(`Erro ao buscar imagens do carro ID ${car.id}:`, error);
+            car.images = [];
         }
+
+        res.render('details', { car });
     });
 });
+// comandos locais
 
+
+// comando do usuario
 app.post('/login_user', async (req, res) => {
     const { email, password } = req.body;
-    const query = 'SELECT * FROM users WHERE email = $1 AND password = $2';
+    const query = 'SELECT * FROM usuarios WHERE email = $1 AND senha = $2';
     
     db.query(query, [email, password], async (err, result) => {
       if (err) {
@@ -232,58 +178,23 @@ app.post('/login_user', async (req, res) => {
         const cloudinaryResponse = await cloudinary.api.resources_by_tag(result.rows[0].id.toString(), { max_results: 1 });
         userImage = cloudinaryResponse.resources.map(resource => resource.secure_url);
       } catch (error) {
-        console.error('Error fetching user images:', error);
         return res.status(500).send({ error: 'Error fetching user images' });
       }
       
       req.session.user = {
         id: result.rows[0].id,
-        name: result.rows[0].name,
+        name: result.rows[0].nome,
         photo: userImage && userImage.length > 0 ? userImage[0] : null
       };
       
       res.redirect('/');
     });
-  });
-
-app.post('/login_admin', (req, res) => {
-    const { login, password } = req.body;
-    const query = 'SELECT * FROM admin WHERE login = $1 AND senha = $2';
-    
-    db.query(query, [login, password], (err, result) => {
-        if (err) {
-            console.error('Error fetching admin:', err);
-            return res.status(500).send({ error: 'Error fetching admin' });
-        }
-        if (result.rows.length === 0) {
-            return res.status(404).send({ error: 'Admin not found' });
-        }
-        
-        req.session.user = {
-            id: result.rows[0].id,
-            name: result.rows[0].login,
-            adm: true
-        };
-        
-        res.redirect('/');
-    });
 });
   
-app.get('/logout', (req, res) => {  
-    req.session.destroy(err => {
-        if (err) {
-
-            return res.status(500).send('Erro ao encerrar a sessão');
-        }
-    res.clearCookie('connect.sid');
-    res.redirect('/')
-    });
-});
-
 app.post('/register_user', (req, res) => {
     const { name, dt_birth, cpf, address, phone, email, password } = req.body;
 
-    const query = 'INSERT INTO users (nick, dt_birth, cpf, address, phone, email, password) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id';
+    const query = 'INSERT INTO usuarios (nome, dt_nascimento, cpf, endereco, telefone, email, senha) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id';
     
     db.query(query, [name, dt_birth, cpf, address, phone, email, password], async (err, result) => {
         if (err) {
@@ -314,6 +225,140 @@ app.post('/register_user', (req, res) => {
     });
     return res.json({success: true});
 });
+
+app.get('/profile', async (req, res) => {
+    if (!req.session.user) {
+        return res.redirect('/login');
+    }
+
+    const userId = req.session.user.id;
+    const query = 'SELECT * FROM usuarios WHERE id = $1';
+
+    try {
+        const result = await db.query(query, [userId]);
+        if (result.rows.length === 0) {
+            return res.status(404).send({ error: 'User not found' });
+        }
+
+        const user = result.rows[0];
+        const tag = `${user.nick}${user.id}`;
+        const cloudinaryResponse = await cloudinary.api.resources_by_tag(tag, { max_results: 1 });
+        
+        const userImages = cloudinaryResponse.resources.map(resource => resource.secure_url);
+
+        user.images = userImages;
+        res.render('user/profile', { user });
+    } catch (error) {
+        console.error('Error loading profile:', error);
+        return res.status(500).send({ error: 'Error loading profile' });
+    }
+});
+
+app.get('/logout', (req, res) => {  
+    req.session.destroy(err => {
+        if (err) {
+
+            return res.status(500).send('Erro ao encerrar a sessão');
+        }
+    res.clearCookie('connect.sid');
+    res.redirect('/')
+    });
+});
+// comando do usuario
+
+
+// comandos do admin
+app.post('/login_admin', (req, res) => {
+    const { login, password } = req.body;
+    const query = 'SELECT * FROM adm WHERE pass = $1 AND password = $2';
+    
+    db.query(query, [login, password], (err, result) => {
+        if (err) {
+            console.error('Error fetching admin:', err);
+            return res.status(500).send({ error: 'Error fetching admin' });
+        }
+        if (result.rows.length === 0) {
+            return res.status(404).send({ error: 'Admin not found' });
+        }
+        
+        req.session.user = {
+            id: result.rows[0].id,
+            name: result.rows[0].login,
+            adm: true
+        };
+        
+        res.redirect('/');
+    });
+});
+
+app.get('/load_users', async (req, res) => {
+    const query = 'SELECT nome , telefone, email, cpf, endereco, criado, atualizado  FROM usuarios';
+        db.query(query, async (err, results) => {
+            if (err){
+                console.log('Error fetching users:', err);
+                return res.status(500).send('Error fetching users');
+            }
+            const users = results.rows;
+            const formattedUsers = await Promise.all(users.map(async user => {
+                try {
+                    const cloudinaryResponse = await cloudinary.api.resources_by_tag(user.nick, { max_results: 1 });
+                    const userImage = cloudinaryResponse.resources.map(resource => resource.secure_url);
+
+                    return {
+                        nick: user.nome,
+                        phone: user.telefone,
+                        email: user.email,
+                        cpf: user.cpf,
+                        adress: user.endereço,
+                        created_at: user.criado,
+                        updated_at: user.atualizado,
+                        images: userImage
+                    };
+                } 
+            catch (error) {
+                console.error(`Error fetching images for user ${user.nick}:`, error);
+                return {
+                    nick: user.nick,
+                    phone: user.phone,
+                    email: user.email,
+                    cpf: user.cpf,
+                    adress: user.adress,
+                    created_at: user.created_at,
+                    updated_at: user.updated_at,
+                    images: [] 
+                };
+            };
+        }));
+        res.json(formattedUsers);
+    });
+});
+
+app.get('/delete_user/:id', (req, res) => {
+    const id = req.params.id;
+    const query = 'DELETE FROM usuarios WHERE id = $1';
+    
+    db.query(query, [id], (err, result) => {
+        if (err) {
+            console.error('Error deleting user:', err);
+            return res.status(500).send({ error: 'Error deleting user' });
+        }
+        res.redirect('/admin');
+    });
+});
+app.get('/delete_car/:id', (req, res) => {
+    const id = req.params.id;
+    const query = 'DELETE FROM carros WHERE id = $1';
+    
+    db.query(query, [id], (err, result) => {
+        if (err) {
+            console.error('Error deleting car:', err);
+            return res.status(500).send({ error: 'Error deleting car' });
+        }
+        res.redirect('/admin');
+    });
+});
+
+// comando do admin
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
 
