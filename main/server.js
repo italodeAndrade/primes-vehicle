@@ -8,6 +8,7 @@ const PORT = 3000;
 const cloudinary = require('./db/cloud.js');
 const fileUpload = require('express-fileupload');
 const session = require('express-session');
+const { TIMEOUT } = require('dns');
 
 
 app.set('view engine', 'ejs');
@@ -191,39 +192,68 @@ app.post('/login_user', async (req, res) => {
     });
 });
   
-app.post('/register_user', (req, res) => {
-    const { name, dt_birth, cpf, address, phone, email, password } = req.body;
+app.post('/register_user', async (req, res) => {
+    try {
+        const { name, dt_birth, cpf, address, phone, email, password } = req.body;
 
-    const query = 'INSERT INTO usuarios (nome, dt_nascimento, cpf, endereco, telefone, email, senha) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id';
-    
-    db.query(query, [name, dt_birth, cpf, address, phone, email, password], async (err, result) => {
-        if (err) {
-            console.error('Error inserting user:', err);
-            return res.status(500).send({ error: 'Error inserting user' });
+        // 1. Validação básica dos campos
+        if (!name || !email || !password) {
+            return res.status(400).json({ error: 'Campos obrigatórios faltando' });
         }
 
-        const userId = result.rows[0].id; 
-       
-        const photo = req.files.photo; 
-        async function uploadPhoto(photo) {
-            try {
-                const result = await cloudinary.uploader.upload(photo.tempFilePath, {
-                    folder: 'users',
-                    public_id: `user_${userId}`,  
-                    tags: [`${name}${userId}`]  
-                });
+        // 2. Inserção no banco de dados
+        const query = `
+            INSERT INTO usuarios 
+                (nome, dt_nascimento, cpf, endereco, telefone, email, senha) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7) 
+            RETURNING id`;
+        
+        const result = await db.query(query, [
+            name, dt_birth, cpf, address, phone, email, password
+        ]);
 
-                console.log(result);
-            } catch (error) {
-                console.error('Error uploading photo:', error);
+        const userId = result.rows[0].id;
+
+        // 3. Upload para Cloudinary (se houver foto)
+        if (req.files?.photo) {
+            const photo = req.files.photo;
+            
+            // Validação do arquivo
+            if (!photo.mimetype.startsWith('image/')) {
+                return res.status(400).json({ error: 'Arquivo não é uma imagem válida' });
             }
+
+            // Configurações do Cloudinary
+            const uploadOptions = {
+                folder: 'users',
+                public_id: `user_${userId}`,
+                tags: [`${name}_${userId}`],
+                resource_type: 'auto',
+                timeout: 80000 // 30 segundos
+            };
+
+            // Upload com tratamento de erros
+            const uploadResult = await cloudinary.uploader.upload(
+                photo.tempFilePath, 
+                uploadOptions
+            );
+
+            console.log('Upload realizado com sucesso:', uploadResult);
         }
 
-        if (photo) {
-            await uploadPhoto(photo);
-        }
-    });
-    return res.json({success: true});
+        // 4. Resposta final
+        res.json({ 
+            success: true,
+            message: 'Usuário registrado com foto'
+        });
+
+    } catch (error) {
+        console.error('Erro no registro:', error);
+        res.status(500).json({ 
+            error: 'Erro no processamento',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
 });
 
 app.get('/profile', async (req, res) => {
@@ -292,7 +322,7 @@ app.post('/login_admin', (req, res) => {
 });
 
 app.get('/load_users', async (req, res) => {
-    const query = 'SELECT nome , telefone, email, cpf, endereco, criado, atualizado  FROM usuarios';
+    const query = 'SELECT id, nome , telefone, email, cpf, endereco, criado, atualizado  FROM usuarios';
         db.query(query, async (err, results) => {
             if (err){
                 console.log('Error fetching users:', err);
@@ -305,11 +335,12 @@ app.get('/load_users', async (req, res) => {
                     const userImage = cloudinaryResponse.resources.map(resource => resource.secure_url);
 
                     return {
-                        nick: user.nome,
-                        phone: user.telefone,
+                        id: user.id,
+                        nome: user.nome,
+                        telefone: user.telefone,
                         email: user.email,
                         cpf: user.cpf,
-                        adress: user.endereço,
+                        endreco: user.endereço,
                         created_at: user.criado,
                         updated_at: user.atualizado,
                         images: userImage
@@ -337,12 +368,25 @@ app.get('/delete_user/:id', (req, res) => {
     const id = req.params.id;
     const query = 'DELETE FROM usuarios WHERE id = $1';
     
-    db.query(query, [id], (err, result) => {
+    db.query(query, [id], async (err, result) => {
         if (err) {
             console.error('Error deleting user:', err);
             return res.status(500).send({ error: 'Error deleting user' });
         }
+
+        async function delete_foto(id) {
+            try {
+                const name = `user_${id}`;
+                const result = await cloudinary.api.delete_resources([name], { resource_type: 'image' });
+                console.log(result);
+            } catch (error) {
+                console.error('Error deleting photo:', error);
+            }
+            
+        }
+        await delete_foto(id);
         res.redirect('/admin');
+
     });
 });
 app.get('/delete_car/:id', (req, res) => {

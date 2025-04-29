@@ -226,12 +226,12 @@
     <!-- Overlay de Confirmação -->
     <div id="container_conf">
         <div class="confirmation-box">
+            <span class="fechar" onclick="cls_conf()">&times;</span>
             <p>Digite "CONFIRMAR" para deletar:</p>
+            <input type="hidden" value="null" id="id">
+            <input type="hidden" value="null" id="type">
             <input type="text" id="confirmationInput">
-            <div class="confirmation-buttons">
-                <button onclick="confirmDeletion()">Confirmar</button>
-                <button onclick="cancelDeletion()">Cancelar</button>
-            </div>
+            <button onclick="process_conf()">deletar</button>
         </div>
     </div>
 
@@ -261,50 +261,40 @@
         load_users();
     };
 
-    function showConfirmationPopup(type, id) {
-        currentDeletion = { type, id };
-        document.getElementById('container_conf').style.display = 'flex';
-        document.getElementById('confirmationInput').focus();
+    function open_conf(type,id){
+        const container = document.getElementById('container_conf');
+        const tipo = document.getElementById('type');
+        const idInput = document.getElementById('id');
+        idInput.value = id;
+        tipo.value = type;
+        container.style.display = 'block';
     }
 
-    function confirmDeletion() {
-        const confirmation = document.getElementById('confirmationInput').value;
-        
-        if(confirmation.toUpperCase() === 'CONFIRMAR') {
-            if(currentDeletion.type === 'user') {
-                performDeletion('user', currentDeletion.id);
-            } else if(currentDeletion.type === 'car') {
-                performDeletion('car', currentDeletion.id);
+    function cls_conf(){
+        const container = document.getElementById('container_conf');
+        const tipo = document.getElementById('type');
+        const id=document.getElementById('id');
+        id.value = null;
+        tipo.value = null;
+        container.style.display = 'none';
+    }
+
+    function process_conf(){
+        const confirmationInput = document.getElementById('confirmationInput').value;
+        const tipo = document.getElementById('type').value;
+        const id = document.getElementById('id').value
+
+        if (confirmationInput === 'CONFIRMAR') {
+            if (tipo == 0) {
+                fetch(`/delete_car/${id}`)
+            } 
+            else if (tipo == 1) {
+                fetch(`/delete_user/${id}`)
             }
         }
-        cancelDeletion();
-    }
-
-    function cancelDeletion() {
-        document.getElementById('container_conf').style.display = 'none';
-        document.getElementById('confirmationInput').value = '';
-        currentDeletion = { type: null, id: null };
-    }
-
-    async function performDeletion(type, id) {
-        try {
-            const endpoint = type === 'user' ? `/delete_user/${id}` : `/delete_car/${id}`;
-            const response = await fetch(endpoint, { method: 'DELETE' });
-
-            if(response.ok) {
-                if(type === 'user') {
-                    load_users();
-                } else {
-                    load_cars();
-                }
-            } else {
-                alert('Erro ao deletar: ' + (await response.text()));
-            }
-        } catch (error) {
-            console.error('Erro:', error);
-            alert('Erro na conexão');
-        }
-    }
+        cls_conf();
+    };
+    
 
     function load_cars() {
         fetch('/load_cars')
@@ -331,7 +321,7 @@
                     </div>
                     <div class="car-actions">
                         <button onclick="window.location.href='/load_dt/${car.id}'">Detalhes</button>
-                        <button onclick="showConfirmationPopup('car', ${car.id})">Deletar</button>
+                        <button onclick="open_conf(0,${car.id})">Deletar</button>
                         <button onclick="edit_car(${car.id})">Editar</button>
                     </div>
                 `;
@@ -359,7 +349,7 @@
                         <p>Telefone: ${user.telefone}</p>
                     </div>
                     <div class="user-actions">
-                        <button onclick="showConfirmationPopup('user', ${user.id})">Deletar</button>
+                        <button onclick="open_conf(1,${user.id})">Deletar</button>
                     </div>
                 `;
                 container.appendChild(userDiv);
