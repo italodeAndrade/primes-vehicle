@@ -196,12 +196,10 @@ app.post('/register_user', async (req, res) => {
     try {
         const { name, dt_birth, cpf, address, phone, email, password } = req.body;
 
-        // 1. Validação básica dos campos
         if (!name || !email || !password) {
             return res.status(400).json({ error: 'Campos obrigatórios faltando' });
         }
 
-        // 2. Inserção no banco de dados
         const query = `
             INSERT INTO usuarios 
                 (nome, dt_nascimento, cpf, endereco, telefone, email, senha) 
@@ -214,25 +212,24 @@ app.post('/register_user', async (req, res) => {
 
         const userId = result.rows[0].id;
 
-        // 3. Upload para Cloudinary (se houver foto)
+        // 3. Upload para Cloudinary
         if (req.files?.photo) {
             const photo = req.files.photo;
             
-            // Validação do arquivo
+           
             if (!photo.mimetype.startsWith('image/')) {
                 return res.status(400).json({ error: 'Arquivo não é uma imagem válida' });
             }
 
-            // Configurações do Cloudinary
+
             const uploadOptions = {
                 folder: 'users',
                 public_id: `user_${userId}`,
                 tags: [`${name}_${userId}`],
                 resource_type: 'auto',
-                timeout: 80000 // 30 segundos
+                timeout: 80000 
             };
 
-            // Upload com tratamento de erros
             const uploadResult = await cloudinary.uploader.upload(
                 photo.tempFilePath, 
                 uploadOptions
@@ -401,9 +398,8 @@ app.get('/delete_car/:id', (req, res) => {
         res.redirect('/admin');
     });
 });
-
 // comando do admin
+
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
-
 });
