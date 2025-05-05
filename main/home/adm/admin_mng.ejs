@@ -4,226 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel Administrativo</title>
-    <link rel="stylesheet" href="adm.css">
+    <link rel="stylesheet" href="css/adm.css">
     <%- include('../../features/index') %>
 </head>
-<style>
-    /* Reset e Estilos Gerais */
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    body {
-        font-family: 'Segoe UI', system-ui, sans-serif;
-        background: #f5f6fa;
-        padding: 2rem;
-        display: flex;
-        flex-direction: column;
-        gap: 2rem;
-        min-height: 100vh;
-    }
-
-    /* Containers Principais */
-    .container-cars, .container-users {
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        padding: 2rem;
-        margin: 1rem 0;
-        border: 1px solid #e0e0e0;
-    }
-
-    .container-cars {
-        background: linear-gradient(145deg, #2c3e50, #34495e);
-        color: white;
-    }
-
-    .container-users {
-        background: linear-gradient(145deg, #34495e, #2c3e50);
-        color: white;
-    }
-
-    /* Overlay de Confirmação */
-    #container_conf {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.7);
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-    }
-
-    .confirmation-box {
-        background: #fff;
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: 0 0 25px rgba(0,0,0,0.2);
-        width: 90%;
-        max-width: 400px;
-        border: 2px solid #3498db;
-    }
-
-    /* Elementos Internos */
-    h1 {
-        font-size: 2rem;
-        margin-bottom: 1.5rem;
-        color: #ecf0f1;
-        border-bottom: 2px solid #3498db;
-        padding-bottom: 0.5rem;
-    }
-
-    /* Listagens */
-    #cars, #users {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 1.5rem;
-        margin-top: 1.5rem;
-    }
-
-    .car-item, .user-item {
-        background: rgba(255,255,255,0.1);
-        border-radius: 10px;
-        padding: 1.5rem;
-        transition: transform 0.2s ease;
-        backdrop-filter: blur(5px);
-        border: 1px solid rgba(255,255,255,0.2);
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-
-    .car-item:hover, .user-item:hover {
-        transform: translateY(-3px);
-        background: rgba(255,255,255,0.15);
-    }
-
-    /* Elementos de Formulário */
-    #confirmationInput {
-        width: 100%;
-        padding: 0.8rem;
-        margin: 1rem 0;
-        border: 2px solid #bdc3c7;
-        border-radius: 8px;
-        font-size: 1rem;
-        background: #f8f9fa;
-        transition: all 0.3s ease;
-        color: #2c3e50;
-    }
-
-    #confirmationInput:focus {
-        border-color: #3498db;
-        background: #fff;
-        outline: none;
-        box-shadow: 0 0 8px rgba(52,152,219,0.3);
-    }
-
-    /* Botões */
-    button {
-        background: #3498db;
-        color: white;
-        border: none;
-        padding: 0.8rem 1.5rem;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    button:hover {
-        background: #2980b9;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    }
-
-    .confirmation-buttons {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1.5rem;
-        justify-content: flex-end;
-    }
-
-    .confirmation-buttons button:first-child {
-        background: #e74c3c;
-    }
-
-    .confirmation-buttons button:first-child:hover {
-        background: #c0392b;
-    }
-
-    .user-actions button {
-        background: #e74c3c;
-        width: 100%;
-        margin-top: 1rem;
-    }
-
-    /* Tipografia e Detalhes */
-    .user-info p {
-        margin: 0.5rem 0;
-        display: grid;
-        grid-template-columns: 100px 1fr;
-        align-items: center;
-        gap: 1rem;
-        padding: 0.5rem 0;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .user-info p:last-child {
-        border-bottom: none;
-    }
-
-    .user-info p span:first-child {
-        color: #bdc3c7;
-        font-weight: 500;
-    }
-
-    /* Responsividade */
-    @media (max-width: 768px) {
-        body {
-            padding: 1rem;
-        }
-
-        .container-cars, .container-users {
-            width: 100%;
-            padding: 1rem;
-        }
-
-        #cars, #users {
-            grid-template-columns: 1fr;
-        }
-
-        .confirmation-box {
-            padding: 1.5rem;
-            margin: 1rem;
-        }
-    }
-
-    @media (max-width: 480px) {
-        h1 {
-            font-size: 1.5rem;
-        }
-
-        button {
-            padding: 0.6rem 1rem;
-            font-size: 0.9rem;
-        }
-
-        .confirmation-buttons {
-            flex-direction: column;
-        }
-
-        .confirmation-buttons button {
-            width: 100%;
-        }
-    }
-</style>
 <body>
 
-    <!-- Overlay de Confirmação -->
+    <!-- overlays ocultos -->
     <div id="container_conf">
         <div class="confirmation-box">
             <span class="fechar" onclick="cls_conf()">&times;</span>
@@ -234,6 +20,32 @@
             <button onclick="process_conf()">deletar</button>
         </div>
     </div>
+
+
+    <div id="container_new">
+        <div class="confirmation-box">
+            <span class="fechar" onclick="cls_conf()">&times;</span>
+            <p>Adicionar Carro</p>
+            <form action="/add_car" method="POST" enctype="multipart/form-data">
+                <input type="text" name="model" placeholder="Modelo" required>
+                <input type="text" name="brand" placeholder="Marca" required>
+                <input type="number" name="year" placeholder="Ano" required>
+                <input type="text" name="color" placeholder="Cor" required>
+                <select name="auto" id="auto" required>
+                    <option value="true">Sim</option>
+                    <option value="false">Não</option>
+                </select>
+                <input type="text" name="name" placeholder="'apelido'" required>
+                <input type="number" name="price" placeholder="Preço" required>
+                <input type="number" name="km_driven" placeholder="Quilometragem (km)" required>
+                <input type="file" name="images[]" multiple accept=".jpg, .jpeg, .png">
+                <button type="submit">Adicionar</button>
+            </form>
+
+        </div>
+
+    </div>
+    <!-- overlays ocultos -->
 
     <div class="container-cars">
         <h1>Carros</h1>
@@ -295,6 +107,20 @@
         cls_conf();
     };
     
+    function open_new(){
+        const container = document.getElementById('container_new');
+        container.style.display = 'block';  
+    }
+
+    function close_new(){
+        const container = document.getElementById('container_new');
+        container.style.display = 'none';  
+    }
+
+    function process_new(){
+        
+    }
+
 
     function load_cars() {
         fetch('/load_cars')

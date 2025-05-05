@@ -4,17 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile</title>
-
+    <%- include('../../features/index') %>
 </head>
-<style>
-    #navbar {
-        position: sticky;   
-        top: 0; 
-        z-index: 1000;
-      }
-</style>
 <body>
-    <div id="navbar"> <%- include('../../features/index') %></div>
     <div class="container">
         <header>
             <h1>Profile of <%= user.nick %></h1> 

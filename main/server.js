@@ -13,6 +13,7 @@ const { TIMEOUT } = require('dns');
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'home'));
+app.use(express.static('home'));
 app.use(express.static(path.join(__dirname, 'features')));
 app.use(express.static(path.join(__dirname, 'home')));
 app.use(express.json());
