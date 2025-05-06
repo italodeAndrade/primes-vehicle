@@ -399,6 +399,33 @@ app.get('/delete_car/:id', (req, res) => {
         res.redirect('/admin');
     });
 });
+
+app.post('/add_car', async (req, res) => {
+    const { model, brand, year, km_driven, color, switch: switchValue,apelido, price } = req.body;
+    const query=`insert into carros (modelo,marca,ano_fabricacao,quilometragem,cor,automatico,apelido_vendedor,preco) values ($1,$2,$3,$4,$5,$6,$7,$8)returning id`;
+    const result = await db.query(query, [model, brand, year, km_driven, color, switchValue,apelido, price]);
+    const carId = result.rows[0].id;
+    if (req.files?.photo) {
+        const photos= Array.isArray(req.files.photo)? req.files.photo : [req.files.photo];
+
+        for (let i=0;i<photos.length;i++){
+            const photo = photos[i];
+            try{
+                const upload=await cloudinary.uploader.upload(photo.tempFilePath, {
+                    folder: 'cars',
+                    public_id: `${apelido}_${carId}_${i}`,
+                    tags: [`${model}_${carId}`],
+                    resource_type: 'auto',
+                    timeout: 80000 
+                })
+                console.log('Upload realizado com sucesso:', upload);
+            }
+            catch (error) {
+                console.error('Error uploading photo:', error);
+            }
+        }
+    }
+});
 // comando do admin
 
 app.listen(PORT, () => {

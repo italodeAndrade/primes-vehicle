@@ -35,7 +35,7 @@
                     <option value="true">Sim</option>
                     <option value="false">Não</option>
                 </select>
-                <input type="text" name="name" placeholder="'apelido'" required>
+                <input type="text" name="apelido" placeholder="'apelido'" required>
                 <input type="number" name="price" placeholder="Preço" required>
                 <input type="number" name="km_driven" placeholder="Quilometragem (km)" required>
                 <input type="file" name="images[]" multiple accept=".jpg, .jpeg, .png">
@@ -118,7 +118,22 @@
     }
 
     function process_new(){
-        
+       const struct =  document.getElementById('form_new');
+       const formData = new FormData(struct);
+         fetch('/add_car', {
+                method: 'POST',
+                body: formData
+          })
+          .then(response => response.json())
+          .then(data => {
+                if (data.success) {
+                 alert('Carro adicionado com sucesso!');
+                 load_cars(); 
+                } else {
+                 alert('Erro ao adicionar carro: ' + data.error);
+                }
+          })
+          .catch(error => console.error('Erro:', error));
     }
 
 
