@@ -88,11 +88,18 @@ app.get('/load_cars', async (req, res) => {
 
         const cars = results.rows;
 
+
         const formattedCars = await Promise.all(cars.map(async car => {
             try {
-                const cloudinaryResponse = await cloudinary.api.resources_by_tag(car.id.toString(), { max_results: 1 });
+                const expression = `public_id:vehicle/${car.nick}_${car.id}_0`;
+        
+                const cloudinaryResponse = await cloudinary.search
+                    .expression(expression)
+                    .max_results(1) 
+                    .execute();
+        
                 const carImages = cloudinaryResponse.resources.map(resource => resource.secure_url);
-
+        
                 return {
                     price: car.price,
                     year: car.year,
@@ -121,6 +128,7 @@ app.get('/load_cars', async (req, res) => {
                 };
             }
         }));
+        
 
         res.json(formattedCars);
     });
@@ -143,7 +151,8 @@ app.get('/load_dt/:id', (req, res) => {
         const car = results.rows[0];
 
         try {
-            const respostaCloudinary = await cloudinary.api.resources_by_tag(car.id.toString(), { 
+            const tag=`${car.model}_${car.id}`
+            const respostaCloudinary = await cloudinary.api.resources_by_tag(tag.toString(), { 
                 max_results: 10,
                 resource_type: 'image'
             });
@@ -401,9 +410,9 @@ app.get('/delete_car/:id', (req, res) => {
 });
 
 app.post('/add_car', async (req, res) => {
-    const { model, brand, year, km_driven, color, switch: switchValue,apelido, price } = req.body;
+    const { model, brand, year, km_driven, color,auto,apelido, price } = req.body;
     const query=`insert into carros (modelo,marca,ano_fabricacao,quilometragem,cor,automatico,apelido_vendedor,preco) values ($1,$2,$3,$4,$5,$6,$7,$8)returning id`;
-    const result = await db.query(query, [model, brand, year, km_driven, color, switchValue,apelido, price]);
+    const result = await db.query(query, [model, brand, year, km_driven, color, auto,apelido, price]);
     const carId = result.rows[0].id;
     if (req.files?.photo) {
         const photos= Array.isArray(req.files.photo)? req.files.photo : [req.files.photo];
@@ -412,7 +421,7 @@ app.post('/add_car', async (req, res) => {
             const photo = photos[i];
             try{
                 const upload=await cloudinary.uploader.upload(photo.tempFilePath, {
-                    folder: 'cars',
+                    folder: 'vehicle',
                     public_id: `${apelido}_${carId}_${i}`,
                     tags: [`${model}_${carId}`],
                     resource_type: 'auto',
@@ -425,6 +434,7 @@ app.post('/add_car', async (req, res) => {
             }
         }
     }
+    res.redirect('/admin');
 });
 // comando do admin
 
