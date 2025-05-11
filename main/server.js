@@ -150,7 +150,7 @@ app.get('/load_dt/:id', (req, res) => {
 
         const car = results.rows[0];
 
-        try {
+        try {   
             const tag=`${car.model}_${car.id}`
             const respostaCloudinary = await cloudinary.api.resources_by_tag(tag.toString(), { 
                 max_results: 10,
@@ -371,42 +371,43 @@ app.get('/load_users', async (req, res) => {
     });
 });
 
-app.get('/delete_user/:id', (req, res) => {
+app.get('/delete_user/:id', async (req, res) => {
     const id = req.params.id;
-    const query = 'DELETE FROM usuarios WHERE id = $1';
-    
-    db.query(query, [id], async (err, result) => {
-        if (err) {
-            console.error('Error deleting user:', err);
-            return res.status(500).send({ error: 'Error deleting user' });
-        }
 
-        async function delete_foto(id) {
-            try {
-                const name = `user_${id}`;
-                const result = await cloudinary.api.delete_resources([name], { resource_type: 'image' });
-                console.log(result);
-            } catch (error) {
-                console.error('Error deleting photo:', error);
-            }
-            
-        }
-        await delete_foto(id);
-        res.redirect('/admin');
+    try {
 
-    });
+        await db.query('DELETE FROM usuarios WHERE id = $1', [id]);
+
+
+        const name = `users/user_${id}`;
+        const cloudResult = await cloudinary.api.delete_resources([name], {
+            resource_type: 'image'
+        });
+        console.log(cloudResult);
+
+        
+    } catch (error) {
+        console.error('Erro ao deletar usuário ou foto:', error);
+        res.status(500).send({ error: 'Erro ao deletar usuário ou foto' });
+    }
 });
-app.get('/delete_car/:id', (req, res) => {
+
+app.get('/delete_car/:id', async (req, res) => {
     const id = req.params.id;
-    const query = 'DELETE FROM carros WHERE id = $1';
-    
-    db.query(query, [id], (err, result) => {
-        if (err) {
-            console.error('Error deleting car:', err);
-            return res.status(500).send({ error: 'Error deleting car' });
-        }
-        res.redirect('/admin');
-    });
+    query='DELETE FROM carros WHERE id = $1 returning modelo'
+    try{
+        const result = await db.query(query,[id]);
+        const modelo = result.rows[0].modelo;
+        const tag=`${modelo}_${id}`;
+        const cloudResult = await cloudinary.api.delete_resources_by_tag(tag, {
+            resource_type: 'image'
+        });
+        console.log(cloudResult);
+    }
+    catch (error) {
+        console.error('Erro ao deletar carro:', error);
+        return res.status(500).send('Erro ao deletar carro');
+    }
 });
 
 app.post('/add_car', async (req, res) => {
