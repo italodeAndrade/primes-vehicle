@@ -172,41 +172,50 @@ app.get('/load_dt/:id', (req, res) => {
 
 // comando do usuario
 app.post('/login_user', async (req, res) => {
-    const { login, password } = req.body;
-    const query = 'SELECT FROM usuarios WHERE email = $1 AND senha = $2 returning id';
-    
-    db.query(query, [login, password], async (err, result) => {
-      if (err) {
-        console.error('Error fetching user:', err);
-        return res.status(500).send({ error: 'Error fetching user' });
-      }
-      if (result.rows.length === 0) {
-        return res.status(404).send({ error: 'User not found' });
-      }
-      
-      let userImage;
-      id = result.rows[0].id;
+  const { login, password } = req.body;
+  const query = 'SELECT id, nome FROM usuarios WHERE email = $1 AND senha = $2';
+
+  db.query(query, [login, password], async (err, result) => {
+    if (err) {
+      console.error('Error fetching user:', err);
+      return res.status(500).send({ error: 'Error fetching user' });
+    }
+    if (result.rows.length === 0) {
+      return res.status(404).send({ error: 'User not found' });
+    }
+
+    const id = result.rows[0].id;
+    const nome = result.rows[0].nome;
+    let userImage = null;
+
+   try {
+  const name = `users/user_${id}`;
+  const cloudinaryResponse = await cloudinary.api.resources({
+    prefix: name,
+    type: 'upload',
+    resource_type: 'image',
+    max_results: 1
+  });
+
+  userImage = cloudinaryResponse.resources.length > 0
+    ? cloudinaryResponse.resources[0].secure_url
+    : null;
+} catch (error) {
+  console.error('Cloudinary error:', error);
+  return res.status(500).send({ error: 'Error fetching user images' });
+}
 
 
+    req.session.user = {
+      id,
+      name: nome,
+      photo: userImage
+    };
 
-        const name = `users/user_${id}`;
-
-      try {
-        const cloudinaryResponse = await cloudinary.api.resources_by_id(name, { max_results: 1 });
-        userImage = cloudinaryResponse.resources.map(resource => resource.secure_url);
-      } catch (error) {
-        return res.status(500).send({ error: 'Error fetching user images' });
-      }
-      
-      req.session.user = {
-        id: result.rows[0].id,
-        name: result.rows[0].nome,
-        photo: userImage && userImage.length > 0 ? userImage[0] : null
-      };
-      
-      res.redirect('/');
-    });
+    res.redirect('/');
+  });
 });
+
   
 app.post('/register_user', async (req, res) => {
     try {
@@ -284,18 +293,25 @@ app.get('/profile', async (req, res) => {
         }
 
         const user = result.rows[0];
-        const tag = `${user.nick}${user.id}`;
-        const cloudinaryResponse = await cloudinary.api.resources_by_tag(tag, { max_results: 1 });
-        
-        const userImages = cloudinaryResponse.resources.map(resource => resource.secure_url);
+        const prefix = `users/user_${user.id}`;
 
+        const cloudinaryResponse = await cloudinary.api.resources({
+            prefix,
+            type: 'upload',
+            resource_type: 'image',
+            max_results: 1
+        });
+
+        const userImages = cloudinaryResponse.resources.map(resource => resource.secure_url);
         user.images = userImages;
+
         res.render('user/profile', { user });
     } catch (error) {
         console.error('Error loading profile:', error);
         return res.status(500).send({ error: 'Error loading profile' });
     }
 });
+
 
 app.get('/logout', (req, res) => {  
     req.session.destroy(err => {
