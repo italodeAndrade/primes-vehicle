@@ -172,10 +172,10 @@ app.get('/load_dt/:id', (req, res) => {
 
 // comando do usuario
 app.post('/login_user', async (req, res) => {
-    const { email, password } = req.body;
-    const query = 'SELECT * FROM usuarios WHERE email = $1 AND senha = $2';
+    const { login, password } = req.body;
+    const query = 'SELECT FROM usuarios WHERE email = $1 AND senha = $2 returning id';
     
-    db.query(query, [email, password], async (err, result) => {
+    db.query(query, [login, password], async (err, result) => {
       if (err) {
         console.error('Error fetching user:', err);
         return res.status(500).send({ error: 'Error fetching user' });
@@ -185,8 +185,14 @@ app.post('/login_user', async (req, res) => {
       }
       
       let userImage;
+      id = result.rows[0].id;
+
+
+
+        const name = `users/user_${id}`;
+
       try {
-        const cloudinaryResponse = await cloudinary.api.resources_by_tag(result.rows[0].id.toString(), { max_results: 1 });
+        const cloudinaryResponse = await cloudinary.api.resources_by_id(name, { max_results: 1 });
         userImage = cloudinaryResponse.resources.map(resource => resource.secure_url);
       } catch (error) {
         return res.status(500).send({ error: 'Error fetching user images' });

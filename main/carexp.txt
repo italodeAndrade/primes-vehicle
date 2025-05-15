@@ -1,0 +1,10 @@
+ ('Civic', 'Honda', 2022, 15000, 'Prata', TRUE, 'SpeedMaster', 125900.00),
+    ('Corolla', 'Toyota', 2021, 32000, 'Preto', TRUE, 'CarQueen', 116500.00),
+    ('Golf', 'Volkswagen', 2020, 45000, 'Branco', FALSE, 'VokMaster', 89900.00),
+    ('Mustang', '32', 2023, 8000, 'Vermelho', TRUE, 'HorsePower', 349900.00),
+    ('Onix', 'Chevrolet', 2022, 22000, 'Cinza', FALSE, 'TremDaBolha', 72900.00),
+    ('Creta', 'Hyundai', 2021, 38000, 'Azul', TRUE, 'KoreaPower', 98900.00),
+    ('Argo', 'Fiat', 2023, 12000, 'Verde', FALSE, 'Italianinho', 67900.00),
+    ('Kicks', 'Nissan', 2020, 50000, 'Marrom', TRUE, 'SuvMaster', 103500.00),
+    ('320i', 'BMW', 2022, 18000, 'Preto', TRUE, 'Bavaria', 265000.00),
+    ('C180', 'Mercedes-Benz', 2023, 9500, 'Prata', TRUE, 'Estrelinha', 318900.00);
