@@ -15,9 +15,11 @@
         <div class="profile-info">
             <div class="profile-image">
                 <% if (user.images && user.images.length > 0) { %>
-                    <img src="<%= user.images[0] %>" alt="Profile picture of <%= user.nick %>">
+                    <img src="<%= user.photo %>" alt="Foto de perfil" class="profile-image">
+
                 <% } else { %>
-                    <img src="/images/default-avatar.png" alt="Default profile picture"> 
+                   <img src="<%= user.photo %>" alt="Foto de perfil" class="profile-image">
+
                 <% } %>
             </div>
 

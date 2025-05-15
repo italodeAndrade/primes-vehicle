@@ -277,7 +277,6 @@ app.post('/register_user', async (req, res) => {
         });
     }
 });
-
 app.get('/profile', async (req, res) => {
     if (!req.session.user) {
         return res.redirect('/login');
@@ -293,17 +292,18 @@ app.get('/profile', async (req, res) => {
         }
 
         const user = result.rows[0];
-        const prefix = `users/user_${user.id}`;
+        const publicId = `users/user_${user.id}`;
 
-        const cloudinaryResponse = await cloudinary.api.resources({
-            prefix,
-            type: 'upload',
-            resource_type: 'image',
-            max_results: 1
+        const roundedUrl = cloudinary.url(publicId, {
+            width: 150,
+            height: 150,
+            gravity: "face", // Foca no rosto, se detectado
+            crop: "thumb",   // Corta a imagem como miniatura
+            radius: "max"    // Torna a imagem totalmente redonda
         });
 
-        const userImages = cloudinaryResponse.resources.map(resource => resource.secure_url);
-        user.images = userImages;
+
+        user.photo = roundedUrl;
 
         res.render('user/profile', { user });
     } catch (error) {
