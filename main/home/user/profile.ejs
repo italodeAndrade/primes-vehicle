@@ -7,11 +7,7 @@
     <%- include('../../features/index') %>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Profile of <%= user.nick %></h1> 
-        </header>
-
+    <div class="user-container">
         <div class="profile-info">
             <div class="profile-image">
                 <% if (user.images && user.images.length > 0) { %>
@@ -24,18 +20,77 @@
             </div>
 
             <div class="profile-details">
-                <p><strong>Full Name:</strong> <%= user.nome %></p>
+                <p><%= user.nome %></p style= "align=center">
                 <p><strong>Email:</strong> <%= user.email %></p>
-                <p><strong>Phone:</strong> <%= user.telefone %></p>
-                <p><strong>Date of Birth:</strong> <%= user.dt_nascimento %></p>
-                <p><strong>CPF:</strong> <%= user.cpf %></p>
-                <p><strong>Address:</strong> <%= user.endereco %></p>
+                <p><strong>telefone:</strong> <%= user.telefone %></p>
+                <p><strong>Endereço:</strong> <%= user.endereco %></p>
             </div>
         </div>
 
-        <footer>
-            <a href="/">Back to Home</a> 
-        </footer>
     </div>
 </body>
 </html>
+
+<style>
+    /* Estilo consistente com as outras páginas do projeto */
+    .user-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 120px); /* Considerando a altura da navbar + footer */
+        padding: 2rem;
+        color: #e0e0e0;
+    }
+
+    .profile-info {
+        background-color: #1e1e2d;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        padding: 2rem;
+        width: 100%;
+        max-width: 800px;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .profile-image {
+        display: flex;
+        justify-content: center;
+    }
+
+    .profile-image img {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #3a7bd5;
+    }
+
+    .profile-details {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .profile-details p {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+
+    .profile-details strong {
+        color: #3a7bd5;
+        font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+        .profile-info {
+            padding: 1.5rem;
+        }
+        
+        .profile-image img {
+            width: 120px;
+            height: 120px;
+        }
+    }
+</style>
