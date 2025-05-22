@@ -219,69 +219,70 @@ app.post('/login_user', async (req, res) => {
   
 app.post('/register_user', async (req, res) => {
   const { name, dt_birth, cpf, address, phone, email, password } = req.body;
-  const file = req.files?.photo_user;
+  const photo = req.files?.photo_user;
 
-  // 1) Validações básicas
   if (!name || !email || !password) {
     return res.status(400).json({ error: 'Campos obrigatórios faltando' });
   }
-  if (!file || !file.mimetype.startsWith('image/')) {
+  if (!photo || !photo.mimetype.startsWith('image/')) {
     return res.status(400).json({ error: 'Selecione uma imagem de perfil válida.' });
   }
 
   try {
-    // 2) Upload para o Cloudinary (aguardamos o término)
-    const uploadResult = await cloudinary.uploader.upload(
-      file.tempFilePath,
-      {
-        folder: 'users',
-        resource_type: 'image',
-        timeout: 80000
-      }
-    );
-    const photoUrl = uploadResult.secure_url;
+    // 1) Inicia transação
+    await db.query('BEGIN');
 
-    // 3) Insere usuário no Postgres, incluindo a URL da foto
+    // 2) Insere usuário sem foto
     const insertSQL = `
       INSERT INTO usuarios
-        (nome, dt_nascimento, cpf, endereco, telefone, email, senha, foto_url)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+        (nome, dt_nascimento, cpf, endereco, telefone, email, senha)
+      VALUES ($1,$2,$3,$4,$5,$6,$7)
       RETURNING id
     `;
-    db.query(
-      insertSQL,
-      [ name, dt_birth, cpf, address, phone, email, password, photoUrl ],
-      (err, result) => {
-        if (err) {
-          console.error('Erro ao inserir usuário:', err);
-          // opcional: poderia apagar a imagem recém enviada, se quiser cleanup
-          return res.status(500).json({ error: 'Erro ao registrar usuário.' });
+    const insertRes = await db.query(insertSQL, [
+      name, dt_birth, cpf, address, phone, email, password
+    ]);
+    const userId = insertRes.rows[0].id;
+
+    // 3) Upload ao Cloudinary com timeout estendido (120s)
+    let uploadResult;
+    try {
+      uploadResult = await cloudinary.uploader.upload(
+        photo.tempFilePath,
+        {
+            folder:'users',
+          public_id:      `user_${userId}`,
+          resource_type:  'image',
+          timeout:        120000     
         }
-        const userId = result.rows[0].id;
-
-        // 4) (Opcional) renomeia o public_id para incluir o ID real
-        cloudinary.uploader.rename(
-          // caminho original no Cloudinary: "users/"+public_id gerado automaticamente
-          uploadResult.public_id,
-          `users/user_${userId}`,
-          { resource_type: 'image' }
-        ).catch(e => console.warn('Falha ao renomear no Cloudinary:', e));
-
-        // 5) Responde sucesso
-        res.json({
-          success: true,
-          message: 'Usuário registrado com foto',
-          userId
-        });
+      );
+    } catch (uploadErr) {
+      // se der timeout ou outro erro, faz rollback e responde 504
+      await db.query('ROLLBACK');
+      console.error('Erro no upload para Cloudinary:', uploadErr);
+      if (uploadErr.name === 'TimeoutError') {
+        return res.status(504).json({ error: 'Upload da imagem demorou demais. Tente novamente.' });
       }
-    );
+      return res.status(500).json({ error: 'Falha no upload da imagem.' });
+    }
 
-  } catch (error) {
-    console.error('Erro no register_user:', error);
-    // se quiser, remove o arquivo temporário aqui
+
+
+    // 5) Confirma transação completa
+    await db.query('COMMIT');
+
+    return res.json({
+      success: true,
+      message: 'Usuário registrado com foto'
+    });
+
+  } catch (err) {
+    // qualquer outro erro, desfaz tudo
+    await db.query('ROLLBACK');
+    console.error('Erro no register_user:', err);
     return res.status(500).json({
       error: 'Erro no processamento',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
   }
 });

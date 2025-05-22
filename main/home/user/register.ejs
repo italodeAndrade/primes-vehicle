@@ -49,112 +49,122 @@
   </body>
 </html>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        // Controle do input de arquivo
-        document.getElementById('photo_user').addEventListener('change', function() {
-            document.getElementById('fileLabel').textContent = this.files[0]?.name || 'Selecione uma foto';
-        });
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  // Atualiza o rótulo do botão de upload
+  document.getElementById('photo_user').addEventListener('change', function() {
+    document.getElementById('fileLabel').textContent = this.files[0]?.name || 'Selecione uma foto';
+  });
 
-        // Função principal de validação
-        async function validateForm() {
-            const form = document.getElementById('form_user');
-            const formData = new FormData(form);
-            const btn = document.querySelector('#form_user button');
+  // Função única de validação e envio
+  async function validateForm(event) {
+    event.preventDefault();
 
-            try {
-                btn.disabled = true;
-                btn.textContent = 'Registrando...';
+    const form = document.getElementById('form_user');
+    const btn  = form.querySelector('button');
+    btn.disabled = true;
+    btn.textContent = 'Registrando...';
 
-                // Validação dos campos
-                const name = (formData.get('name') || '').trim();
-                const email = (formData.get('email') || '').trim();
-                const phone = (formData.get('phone') || '').trim();
-                const address = (formData.get('address') || '').trim();
-                const cpf = (formData.get('cpf') || '').trim();
-                const birth = formData.get('dt_birth');
-                const pwd = formData.get('password');
-                const pwd2 = formData.get('password2');
-                const photo = formData.get('photo_user');
+    const formData = new FormData(form);
+    const name     = (formData.get('name') || '').trim();
+    const email    = (formData.get('email') || '').trim();
+    const phone    = (formData.get('phone') || '').trim();
+    const address  = (formData.get('address') || '').trim();
+    const cpf      = (formData.get('cpf') || '').trim();
+    const birth    = formData.get('dt_birth');
+    const pwd      = formData.get('password') || '';
+    const pwd2     = formData.get('password2') || '';
+    const photo    = formData.get('photo_user');
 
-                const errors = [];
+    const errors = [];
 
-                // Validações
-                if (!photo?.type?.startsWith('image/')) errors.push('Selecione uma imagem válida.');
-                if (name.length < 3 || !/^[A-Za-zÀ-ú\s]+$/.test(name)) errors.push('Nome inválido (mínimo 3 letras).');
-                if (!/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(cpf)) errors.push('Formato de CPF inválido.');
-                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('Formato de e-mail inválido.');
-                
-                // Validação de idade
-                const birthDate = new Date(birth);
-                if (isNaN(birthDate)) {
-                    errors.push('Data de nascimento inválida.');
-                } else {
-                    const ageDiff = Date.now() - birthDate.getTime();
-                    const age = new Date(ageDiff).getUTCFullYear() - 1970;
-                    if (age < 18) errors.push('Você precisa ter pelo menos 18 anos.');
-                }
-
-                if (!/^\d{10,11}$/.test(phone.replace(/\D/g, ''))) errors.push('Telefone deve ter 10 ou 11 dígitos.');
-                if (address && address.length < 5) errors.push('Endereço muito curto (mínimo 5 caracteres).');
-                if (pwd.length < 8) errors.push('Senha deve ter pelo menos 8 caracteres.');
-                if (pwd !== pwd2) errors.push('As senhas não coincidem.');
-
-                if (errors.length > 0) {
-                    await Swal.fire({ icon: 'error', title: 'Erros encontrados:', html: errors.join('<br>') });
-                    return;
-                }
-
-                // Envio dos dados
-                const response = await fetch('/register_user', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
-
-                if (!result.ok) {
-                    throw new Error(result.error || 'Erro desconhecido no servidor');
-                }
-
-                await Swal.fire({ icon: 'success', title: 'Cadastro realizado!', text: 'Redirecionando para login...' });
-                window.location.href = '/login';
-
-            } catch (error) {
-                console.error('Erro:', error);
-                Swal.fire({ 
-                    icon: 'error', 
-                    title: 'Erro no cadastro', 
-                    html: typeof error === 'string' ? error : (error.message || 'Erro desconhecido')
-                });
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Registrar';
-            }
-        }
-
-        
-        async function uploadToCloudinary(file) {
-    const cloudinaryURL = 'https://api.cloudinary.com/v1_1/SEU_CLOUD_NAME/upload';
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', 'SEU_UPLOAD_PRESET');
-
-    const response = await fetch(cloudinaryURL, {
-        method: 'POST',
-        body: formData
-    });
-
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error.message);
+    // 1) foto
+    if (!(photo instanceof File) || !photo.type.startsWith('image/')) {
+      errors.push('Selecione uma imagem válida.');
+    }
+    // 2) nome
+    if (name.length < 3 || !/^[A-Za-zÀ-ú\s]+$/.test(name)) {
+      errors.push('Nome inválido (mínimo 3 letras).');
+    }
+    // 3) CPF
+    if (!/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(cpf)) {
+      errors.push('Formato de CPF inválido.');
+    }
+    // 4) email
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.push('Formato de e-mail inválido.');
+    }
+    // 5) idade ≥18
+    const dBirth = new Date(birth);
+    if (isNaN(dBirth.getTime())) {
+      errors.push('Data de nascimento inválida.');
+    } else {
+      const diff = Date.now() - dBirth.getTime();
+      const age  = new Date(diff).getUTCFullYear() - 1970;
+      if (age < 18) {
+        errors.push('Você precisa ter pelo menos 18 anos.');
+      }
+    }
+    // 6) telefone
+    if (phone.replace(/\D/g, '').length < 10) {
+      errors.push('Telefone deve ter ao menos 10 dígitos.');
+    }
+    // 7) endereço (opcional)
+    if (address && address.length < 5) {
+      errors.push('Endereço muito curto (mínimo 5 caracteres).');
+    }
+    // 8) senha
+    if (pwd.length < 8) {
+      errors.push('Senha deve ter pelo menos 8 caracteres.');
+    }
+    if (pwd !== pwd2) {
+      errors.push('As senhas não coincidem.');
     }
 
-    return await response.json();
+    if (errors.length) {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Erros encontrados:',
+        html: errors.join('<br>')
+      });
+      btn.disabled = false;
+      btn.textContent = 'Registrar';
+      return;
+    }
+
+    // envio ao servidor
+    try {
+      const response = await fetch('/register_user', {
+        method: 'POST',
+        body: formData
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        // usa o erro que veio do back-end
+        throw new Error(result.error || 'Falha inesperada no servidor.');
       }
 
-        document.getElementById('form_user').addEventListener('submit', (e) => {
-            e.preventDefault();
-            validateForm();
-        });
-    </script>
+      await Swal.fire({
+        icon: 'success',
+        title: 'Cadastro realizado!',
+        text: 'Redirecionando para login...'
+      });
+      window.location.href = '/login';
+
+    } catch (err) {
+      console.error('Erro no cadastro:', err);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Erro no cadastro',
+        text: err.message || 'Erro desconhecido.'
+      });
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Registrar';
+    }
+  }
+
+  document.getElementById('form_user')
+    .addEventListener('submit', validateForm);
+</script>
