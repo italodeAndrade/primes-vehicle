@@ -48,3 +48,116 @@ VALUES
 ('Gol', 'Volkswagen', 2018, 35000, 'Vermelho', TRUE, 'GolSport', 45000.00),
 ('Fiesta', 'Ford', 2017, 50000, 'Azul', TRUE, 'FiestaFast', 38000.00),
 ('Onix', 'Chevrolet', 2021, 8000, 'Prata', TRUE, 'OnixPlus', 92000.00);
+
+segundo:
+
+\-- 1. Tabela de Endereços (opcional para usuário)
+CREATE TABLE enderecos (
+id SERIAL PRIMARY KEY,
+cep VARCHAR(9) NOT NULL,
+logradouro VARCHAR(100) NOT NULL,
+numero VARCHAR(10) NOT NULL,
+complemento VARCHAR(50),
+bairro VARCHAR(50) NOT NULL,
+cidade VARCHAR(50) NOT NULL,
+estado CHAR(2) NOT NULL,
+pais VARCHAR(30) DEFAULT 'Brasil'
+);
+
+\-- 2. Tabela de Marcas
+CREATE TABLE marcas (
+id SERIAL PRIMARY KEY,
+nome VARCHAR(80) UNIQUE NOT NULL
+);
+
+\-- 3. Tabela de Modelos
+CREATE TABLE modelos (
+id SERIAL PRIMARY KEY,
+marca\_id INTEGER NOT NULL
+REFERENCES marcas(id)
+ON UPDATE CASCADE
+ON DELETE RESTRICT,
+nome VARCHAR(80) NOT NULL,
+UNIQUE(marca\_id, nome)
+);
+
+\-- 4. Tabela de Usuários (endereço opcional via FK)
+CREATE TABLE usuarios (
+id SERIAL PRIMARY KEY,
+nome VARCHAR(80) NOT NULL,
+dt\_nascimento DATE NOT NULL
+CHECK (dt\_nascimento <= CURRENT\_DATE - INTERVAL '18 years'),
+cpf VARCHAR(14) UNIQUE NOT NULL CHECK (cpf \~ '^\d{3}.\d{3}.\d{3}-\d{2}\$'),
+endereco\_id INTEGER REFERENCES enderecos(id) ON DELETE SET NULL,
+telefone VARCHAR(15)  NULL,
+email VARCHAR(100) UNIQUE NOT NULL CHECK (email \~\* '^\[A-Za-z0-9.\_%-]+@\[A-Za-z0-9.-]+.\[A-Za-z]+\$'),
+senha VARCHAR(100) NOT NULL CHECK (LENGTH(senha) >= 8),
+criado TIMESTAMP NOT NULL DEFAULT CURRENT\_TIMESTAMP,
+atualizado TIMESTAMP NOT NULL DEFAULT CURRENT\_TIMESTAMP
+);
+
+\-- 5. Tabela de Carros
+CREATE TABLE carros (
+id SERIAL PRIMARY KEY,
+modelo\_id INTEGER NOT NULL
+REFERENCES modelos(id)
+ON UPDATE CASCADE
+ON DELETE RESTRICT,
+ano\_fabricacao INTEGER NOT NULL
+CHECK (ano\_fabricacao BETWEEN 1886 AND EXTRACT(YEAR FROM CURRENT\_DATE) + 1),
+ano\_modelo INTEGER NOT NULL
+CHECK (ano\_modelo >= ano\_fabricacao),
+quilometragem DOUBLE PRECISION
+CHECK (quilometragem >= 0),
+cor VARCHAR(50) NOT NULL,
+automatico BOOLEAN NOT NULL DEFAULT FALSE,
+preco NUMERIC(10, 2) NOT NULL
+CHECK (preco > 0),
+data\_criacao TIMESTAMP NOT NULL DEFAULT CURRENT\_TIMESTAMP,
+data\_atualizacao TIMESTAMP NOT NULL DEFAULT CURRENT\_TIMESTAMP
+);
+
+\-- 6. Índices para Otimização
+CREATE INDEX idx\_carros\_preco           ON carros(preco);
+CREATE INDEX idx\_carros\_ano\_fabricacao ON carros(ano\_fabricacao);
+CREATE INDEX idx\_carros\_modelo\_id      ON carros(modelo\_id);
+CREATE INDEX idx\_modelos\_marca\_id      ON modelos(marca\_id);
+CREATE INDEX idx\_usuarios\_email        ON usuarios(email);
+CREATE INDEX idx\_usuarios\_cpf          ON usuarios(cpf);
+
+\-- 7. Função e Triggers para timestamp
+CREATE OR REPLACE FUNCTION atualiza\_timestamp()
+RETURNS TRIGGER AS \$\$
+BEGIN
+NEW\.atualizado = CURRENT\_TIMESTAMP;
+RETURN NEW;
+END;
+
+$$
+
+CREATE TRIGGER trg_usuarios_atualizado
+BEFORE UPDATE ON usuarios
+FOR EACH ROW EXECUTE FUNCTION atualiza_timestamp();
+
+CREATE TRIGGER trg_carros_atualizado
+BEFORE UPDATE ON carros
+FOR EACH ROW EXECUTE FUNCTION atualiza_timestamp();
+
+-- 8. View para Carros Disponíveis
+CREATE VIEW vw_carros_disponiveis AS
+SELECT
+    c.id,
+    m.nome    AS marca,
+    md.nome   AS modelo,
+    c.ano_fabricacao,
+    c.ano_modelo,
+    c.quilometragem,
+    c.cor,
+    c.automatico,
+    c.preco
+FROM carros c
+JOIN modelos md ON c.modelo_id = md.id
+JOIN marcas m   ON md.marca_id   = m.id
+WHERE c.preco > 0;
+
+$$
