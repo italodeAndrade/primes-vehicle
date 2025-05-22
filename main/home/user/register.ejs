@@ -3,60 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<style>
-    #navbar {
-        position: sticky;   
-        top: 0; 
+    <title>Register</title>
+    <style>
+      #navbar {
+        position: sticky;
+        top: 0;
         z-index: 1000;
       }
-</style>
+      
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background-color: #3a3a4a;
+        color: #fff;
+      }
+      
+      #register {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        padding: 40px 20px;
+      }
+      
+      #register h1 {
+        color: #fff;
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 2em;
+
+      }
+      
+      #form_user {
+        background: #1e1e2a;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        width: 100%;
+        max-width: 500px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+      
+      #form_user input {
+        width: 100%;
+        background: #2d2d3a;
+        border: 1px solid #3a3a4a;
+        color: #fff;
+        padding: 12px 15px;
+        border-radius: 4px;
+        font-size: 16px;
+        box-sizing: border-box;
+        transition: border-color 0.3s;
+      }
+      
+      #form_user input:focus {
+        outline: none;
+        border-color: #bd2a65;
+      }
+      
+      .file-input-container {
+        position: relative;
+        margin-bottom: 5px;
+      }
+      
+      #photo_user {
+        opacity: 0;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: 0;
+        cursor: pointer;
+      }
+      
+      .file-input-label {
+        display: block;
+        padding: 12px 15px;
+        background: #bd2a65;
+        color: white;
+        border-radius: 4px;
+        text-align: center;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+      
+      .file-input-label:hover {
+        background: #7e1d44;
+      }
+      
+      #form_user button {
+        background: #bd2a65;
+        color: #fff;
+        cursor: pointer;
+        transition: 0.3s background;
+        border-radius: 4px;
+        font-size: 16px;
+        padding: 12px;
+        border: 0;
+        margin-top: 10px;
+        width: 100%;
+      }
+      
+      #form_user button:hover {
+        background: #7e1d44;
+      }
+      
+      #form_user a {
+        color: #fff;
+        text-align: center;
+        margin-top: 15px;
+        text-decoration: none;
+        display: block;
+        transition: 0.3s color;
+      }
+      
+      #form_user a:hover {
+        color: #bd2a65;
+      }
+      
+      @media (max-width: 600px) {
+        #form_user {
+          padding: 30px 20px;
+        }
+      }
+    </style>
+</head>
 <body>
-    <div id="navbar"> <%- include('../../features/index') %></div>
+    <div id="navbar"><%- include('../../features/index') %></div>
     <div id="register">
-        <h1>Register</h1>
+        <h1>Registrar</h1>
         <form id="form_user" enctype="multipart/form-data">
-          <input type="file" id="photo_user" name="photo" accept="image/*" required>
+          <div class="file-input-container">
+            <label for="photo_user" class="file-input-label" id="fileLabel">Selecione uma foto</label>
+            <input type="file" id="photo_user" name="photo" accept="image/*" required>
+          </div>
           <input type="text" id="name" name="name" placeholder="Name" required>
           <input type="text" id="email" name="email" placeholder="Email" required>
-          <input type="text" id="phone" name="phone" placeholder="Phone">
-          <input type="text" id="address" name="address" placeholder="Address">
+          <input type="text" id="phone" name="phone" placeholder="telefone">
+          <input type="text" id="address" name="address" placeholder="Endereço">
           <input type="text" id="cpf" name="cpf" placeholder="CPF" required>
           <input type="date" id="birth" name="dt_birth" placeholder="Birth" required>
-          <input type="password" id="password" name="password" placeholder="Insert your Password..." required>
-          <input type="password" id="password2" name="password2" placeholder="Repeat the password..." required>
-          <button type="submit">Register</button>
-          <a href="/login">Already have account?</a>
+          <input type="password" id="password" name="password" placeholder="Insira sua senha..." required>
+          <input type="password" id="password2" name="password2" placeholder="Reinsira sua senha..." required>
+          <button type="submit">Registrar</button>
+          <a href="/login">já tem uma conta ?</a>
         </form>        
     </div>
-</body>
-</html>
 
-<script>
-  document.getElementById('form_user').addEventListener('submit', async (e) => {
-      e.preventDefault();
-  
-      const form = document.getElementById('form_user');
-      const formData = new FormData(form);
-  
-      try {
-          const response = await fetch('/register_user', {
+    <script>
+
+        
+      // Controle do input de arquivo
+      document.getElementById('photo_user').addEventListener('change', function() {
+        const fileName = this.files[0]?.name || 'Selecione uma foto';
+        document.getElementById('fileLabel').textContent = fileName;
+      });
+
+      
+
+      function validateForm() {
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;   
+            const phone = document.getElementById('phone').value;
+            const address = document.getElementById('address').value;
+            const cpf = document.getElementById('cpf').value;
+            const birth = document.getElementById('birth').value;
+          const password = document.getElementById('password').value;
+          const password2 = document.getElementById('password2').value;
+
+      
+          if (password !== password2) {
+              alert('As senhas não coincidem!');
+              return false;
+          }
+            if (name.length < 3) {
+                alert('O nome deve ter pelo menos 3 caracteres.');
+                
+                if (!/^[a-zA-Z\s]+$/.test(name)) {
+                alert('O nome deve conter apenas letras e espaços.');
+                return false;
+                }
+                return false;
+            }
+
+           if (!  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){return false;}
+            
+            if (phone.length < 10) {
+                alert('O telefone deve ter pelo menos 10 dígitos.');
+                return false;
+            }
+            if (address.length < 5) {
+                alert('O endereço deve ter pelo menos 5 caracteres.');
+                return false;
+            }   
+            
+            return true;
+      }
+
+
+      function submitForm(event) {
+          event.preventDefault();
+      
+          const form = document.getElementById('form_user');
+          const formData = new FormData(form);
+      
+          fetch('/register_user', {
               method: 'POST',
               body: formData
+          })
+          .then(response => response.json())
+          .then(data => {
+              if (data.error) {
+                  alert(data.error);
+              } else {
+                  window.location.href = '/login'; 
+              }
+          })
+          .catch(error => {
+              console.error('Erro no registro:', error);
+              alert('Erro inesperado ao registrar usuário');
           });
-  
-          const data = await response.json();
-  
-          if (data.error) {
-              alert(data.error);
-          } else {
-              window.location.href = '/login'; 
-          }
-      } catch (error) {
-          console.error('Erro no registro:', error);
-          alert('Erro inesperado ao registrar usuário');
       }
-  });
-  </script>
-  
+      
+    </script>
+</body>
+</html>
