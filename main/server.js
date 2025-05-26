@@ -66,9 +66,34 @@ mongoconn();
 
 
 // comandos locais
-    const {loadCars,loadDetails} = require('./functions/localfunc.js');
+    const {loadCars,loadDetails,getMarcas,getModelos} = require('./functions/localfunc.js');
     app.get('/load_cars',loadCars);
     app.get('/load_details/:id', loadDetails);
+    app.get('/get_marcas', async (req, res) => {
+        try {
+            const marcas = await getMarcas();
+            res.json(marcas);
+        } catch (error) {
+            console.error('Erro ao buscar marcas:', error);
+            res.status(500).json({ error: 'Erro ao buscar marcas' });
+        }
+    });
+
+    app.get('/get_modelos', async (req, res) => {
+        try {
+            const marcaId = req.query.marca_id; // Note que estamos usando query param
+            if (!marcaId) {
+                return res.status(400).json({ error: 'ID da marca não fornecido' });
+            }
+            
+            const modelos = await getModelos(marcaId);
+            res.json(modelos);
+        } catch (error) {
+            console.error('Erro ao buscar modelos:', error);
+            res.status(500).json({ error: 'Erro ao buscar modelos' });
+        }
+    });
+
 
 // comandos locais
 
@@ -247,8 +272,8 @@ const {
     deleteCar,
     addCar
 } = require('./functions/admfunc.js');
+const { get } = require('http');
 
-// Rotas Admin
 app.post('/login_admin', loginAdmin);
 app.get('/load_users', loadUsers);
 app.get('/delete_user/:id', deleteUser);

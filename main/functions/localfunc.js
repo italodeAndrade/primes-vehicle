@@ -1,6 +1,7 @@
-const  db = require('../db/consql.js');
+const db = require('../db/consql.js');
 const cloudinary = require('../db/cloud.js');
 
+// Função para carregar carros
 async function loadCars(req, res) {
     const query = `
         SELECT
@@ -29,9 +30,7 @@ async function loadCars(req, res) {
 
         const formattedCars = await Promise.all(cars.map(async car => {
             try {
-                // Ajuste a lógica de tags conforme seus novos requisitos
                 const expression = `public_id:vehicle/${car.id}_0`;
-                
                 const cloudinaryResponse = await cloudinary.search
                     .expression(expression)
                     .max_results(1)
@@ -42,7 +41,7 @@ async function loadCars(req, res) {
                 return {
                     ...car,
                     year: car.year,
-                    switch: car.automatic, // Mantendo compatibilidade
+                    switch: car.automatic,
                     images: carImages
                 };
             } catch (error) {
@@ -58,8 +57,7 @@ async function loadCars(req, res) {
     });
 }
 
-
-
+// Função para carregar detalhes do carro
 async function loadDetails(req, res) {
     const id = req.params.id;
     const query = `
@@ -105,7 +103,6 @@ async function loadDetails(req, res) {
             car.images = [];
         }
 
-        // Mantendo a estrutura anterior para compatibilidade
         res.render('details', { 
             car: {
                 ...car,
@@ -118,4 +115,34 @@ async function loadDetails(req, res) {
     });
 }
 
-module.exports = {loadCars,loadDetails};
+// Função para obter marcas
+async function getMarcas() {
+    try {
+        const result = await db.query('SELECT id, nome FROM marcas ORDER BY nome');
+        return result.rows;
+    } catch (error) {
+        console.error('Erro ao buscar marcas:', error);
+        throw error;
+    }
+}
+
+// Função para obter modelos por marca
+async function getModelos(marcaId) {
+    try {
+        const result = await db.query(
+            'SELECT id, nome FROM modelos WHERE marca_id = $1 ORDER BY nome',
+            [marcaId]
+        );
+        return result.rows;
+    } catch (error) {
+        console.error('Erro ao buscar modelos:', error);
+        throw error;
+    }
+}
+
+module.exports = {
+    loadCars,
+    loadDetails,
+    getMarcas,
+    getModelos
+};

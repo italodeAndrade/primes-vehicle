@@ -21,29 +21,35 @@
         </div>
     </div>
 
-
     <div id="container_new">
         <div class="confirmation-box">
-            <span class="fechar" onclick="cls_conf()">&times;</span>
+            <span class="fechar" onclick="close_new()">&times;</span>
             <p>Adicionar Carro</p>
-            <form action="/add_car" method="POST" enctype="multipart/form-data">
-                <input type="text" name="model" placeholder="Modelo" required>
-                <input type="text" name="brand" placeholder="Marca" required>
-                <input type="number" name="year" placeholder="Ano" required>
-                <input type="text" name="color" placeholder="Cor" required>
-                <select name="auto" id="auto" required>
-                    <option value="true">Sim</option>
-                    <option value="false">Não</option>
+            <form id="form_new" action="/add_car" method="POST" enctype="multipart/form-data">
+                <select name="marca_id" id="marca" required>
+                    <option value="">Selecione a Marca</option>
                 </select>
-                <input type="text" name="apelido" placeholder="'apelido'" required>
-                <input type="number" name="price" placeholder="Preço" required>
-                <input type="number" name="km_driven" placeholder="Quilometragem (km)" required>
+                
+                <select name="modelo_id" id="modelo" required disabled>
+                    <option value="">Selecione o Modelo</option>
+                </select>
+
+                <input type="number" name="ano_fabricacao" placeholder="Ano Fabricação" min="1886" required>
+                <input type="number" name="ano_modelo" placeholder="Ano Modelo" min="1886" required>
+                <input type="text" name="cor" placeholder="Cor" required>
+                
+                <select name="automatico" required>
+                    <option value="true">Automático</option>
+                    <option value="false">Manual</option>
+                </select>
+
+                <input type="number" name="quilometragem" placeholder="Quilometragem (km)" min="0" required>
+                <input type="number" name="preco" placeholder="Preço" step="0.01" required>
+                
                 <input type="file" name="photo" multiple accept=".jpg, .jpeg, .png">
                 <button type="submit">Adicionar</button>
             </form>
-
         </div>
-
     </div>
     <!-- overlays ocultos -->
 
@@ -51,7 +57,7 @@
         <h1>Carros</h1>
         <div class="controls">
             <button onclick="load_cars()">Atualizar</button>
-            <button>Adicionar Carro</button>
+            <button onclick="open_new()">Adicionar Carro</button>
         </div>
         <div id="cars"></div>
     </div>
@@ -71,9 +77,57 @@
     window.onload = function() {
         load_cars();    
         load_users();
+        initMarcasSelect();
     };
 
-    function open_conf(type,id){
+    // Inicializa o select de marcas
+    async function initMarcasSelect() {
+        try {
+            const response = await fetch('/get_marcas');
+            const marcas = await response.json();
+            const select = document.getElementById('marca');
+            
+            marcas.forEach(marca => {
+                const option = document.createElement('option');
+                option.value = marca.id;
+                option.textContent = marca.nome;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Erro ao carregar marcas:', error);
+        }
+    }
+
+    // Carrega modelos quando selecionar marca
+    document.getElementById('marca').addEventListener('change', async function() {
+        const marcaId = this.value;
+        const modeloSelect = document.getElementById('modelo');
+        
+        if (!marcaId) {
+            modeloSelect.innerHTML = '<option value="">Selecione o Modelo</option>';
+            modeloSelect.disabled = true;
+            return;
+        }
+
+        try {
+            const response = await fetch(`/get_modelos?marca_id=${marcaId}`);
+            const modelos = await response.json();
+            
+            modeloSelect.innerHTML = '<option value="">Selecione o Modelo</option>';
+            modeloSelect.disabled = false;
+            
+            modelos.forEach(modelo => {
+                const option = document.createElement('option');
+                option.value = modelo.id;
+                option.textContent = modelo.nome;
+                modeloSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Erro ao carregar modelos:', error);
+        }
+    });
+
+    function open_conf(type, id) {
         const container = document.getElementById('container_conf');
         const tipo = document.getElementById('type');
         const idInput = document.getElementById('id');
@@ -82,60 +136,42 @@
         container.style.display = 'block';
     }
 
-    function cls_conf(){
+    function cls_conf() {
         const container = document.getElementById('container_conf');
         const tipo = document.getElementById('type');
-        const id=document.getElementById('id');
+        const id = document.getElementById('id');
         id.value = null;
         tipo.value = null;
         container.style.display = 'none';
     }
 
-    function process_conf(){
+    function process_conf() {
         const confirmationInput = document.getElementById('confirmationInput').value;
         const tipo = document.getElementById('type').value;
-        const id = document.getElementById('id').value
+        const id = document.getElementById('id').value;
 
         if (confirmationInput === 'CONFIRMAR') {
             if (tipo == 0) {
                 fetch(`/delete_car/${id}`)
+                    .then(() => load_cars());
             } 
             else if (tipo == 1) {
                 fetch(`/delete_user/${id}`)
+                    .then(() => load_users());
             }
         }
         cls_conf();
     };
     
-    function open_new(){
+    function open_new() {
         const container = document.getElementById('container_new');
         container.style.display = 'block';  
     }
 
-    function close_new(){
+    function close_new() {
         const container = document.getElementById('container_new');
         container.style.display = 'none';  
     }
-
-    function process_new(){
-       const struct =  document.getElementById('form_new');
-       const formData = new FormData(struct);
-         fetch('/add_car', {
-                method: 'POST',
-                body: formData
-          })
-          .then(response => response.json())
-          .then(data => {
-                if (data.success) {
-                 alert('Carro adicionado com sucesso!');
-                 load_cars(); 
-                } else {
-                 alert('Erro ao adicionar carro: ' + data.error);
-                }
-          })
-          .catch(error => console.error('Erro:', error));
-    }
-
 
     function load_cars() {
         fetch('/load_cars')
