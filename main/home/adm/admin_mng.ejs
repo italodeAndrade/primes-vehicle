@@ -4,25 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel Administrativo</title>
+
+    <!-- CSS personalizado -->
     <link rel="stylesheet" href="css/adm.css">
-    <%- include('../../features/index') %>
+
+    <!-- SweetAlert2 CSS e JS -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    
 </head>
 <body>
-    <button id="new_car" onclick="open_tab(container_new)">novo carro</button>
-    <button id="new_brand" onclick="open_tab(container_brand)">nova marca & modelo</button>
+    <div id="navbar"><%- include('../../features/index') %></div>
+    <!-- Botões de controle -->
+    <button id="new_car">novo carro</button>
+    <button id="new_brand">novo modelo</button>
 
-    <!-- overlays ocultos -->
-    <div id="container_conf">
-        <div class="confirmation-box">
-            <span class="fechar" onclick="close_tab(container_conf)">&times;</span>
-            <p>Digite "CONFIRMAR" para deletar:</p>
-            <input type="hidden" value="null" id="id">
-            <input type="hidden" value="null" id="type">
-            <input type="text" id="confirmationInput">
-            <button onclick="process_conf()">deletar</button>
-        </div>
-    </div>
-
+    <!-- Modal de Adicionar Carro -->
     <div id="container_new">
         <div class="confirmation-box">
             <span class="fechar" onclick="close_tab(container_new)">&times;</span>
@@ -31,52 +29,48 @@
                 <select name="marca_id" id="marca" required>
                     <option value="">Selecione a Marca</option>
                 </select>
-                
                 <select name="modelo_id" id="modelo" required disabled>
                     <option value="">Selecione o Modelo</option>
                 </select>
-
                 <input type="number" name="ano_fabricacao" placeholder="Ano Fabricação" min="1886" required>
                 <input type="number" name="ano_modelo" placeholder="Ano Modelo" min="1886" required>
                 <input type="text" name="cor" placeholder="Cor" required>
-                
                 <select name="automatico" required>
                     <option value="true">Automático</option>
                     <option value="false">Manual</option>
                 </select>
-
                 <input type="number" name="quilometragem" placeholder="Quilometragem (km)" min="0" required>
                 <input type="number" name="preco" placeholder="Preço" step="0.01" required>
-                
                 <input type="file" name="photo" multiple accept=".jpg, .jpeg, .png">
                 <button type="submit">Adicionar</button>
             </form>
         </div>
     </div>
 
+    <!-- Modal de Adicionar Marca/Modelo -->
     <div id="container_model">
         <div class="confirmation-box">
-            <span class="fechar" onclick="close_tab(container_brand)">&times;</span>
-            <form action="/add_model" method="POST">
-                <p>Adicionar Marca e Modelo</p>
+            <span class="fechar" onclick="close_tab(container_model)">&times;</span>
+            <p>Adicionar Modelo</p>
+            <form id="form_brand" action="/add_model" method="POST">
                 <input type="text" name="brand" placeholder="Nome da Marca" required>
                 <input type="text" name="model" placeholder="Nome do Modelo" required>
-                <br>
                 <button type="submit">Adicionar</button>
             </form>
         </div>
     </div>
-    <!-- overlays ocultos -->
 
+    <!-- Listagem de Carros -->
     <div class="container-cars">
         <h1>Carros</h1>
         <div class="controls">
             <button onclick="load_cars()">Atualizar</button>
-            <button onclick="open_new()">Adicionar Carro</button>
+            <button onclick="open_tab(container_new)">Adicionar Carro</button>
         </div>
         <div id="cars"></div>
     </div>
 
+    <!-- Listagem de Usuários -->
     <div class="container-users">
         <h1>Usuários</h1>
         <div class="controls">
@@ -86,158 +80,331 @@
         <div id="users"></div>
     </div>
 
-<script>
-    let currentDeletion = { type: null, id: null };
+    <script>
+      // Abre e fecha modais
+      function close_tab(c){ c.style.display='none'; }
+      function open_tab(c){ c.style.display='flex'; }
 
-    window.onload = function() {
-        load_cars();    
+      document.getElementById('new_car')
+        .addEventListener('click', () => open_tab(container_new));
+      document.getElementById('new_brand')
+        .addEventListener('click', () => open_tab(container_model));
+
+      // Inicialização
+      window.onload = () => {
+        load_cars();
         load_users();
         initMarcasSelect();
-    };
+      };
 
-    // Inicializa o select de marcas
-    async function initMarcasSelect() {
+      // Carrega marcas no select
+      async function initMarcasSelect(){
         try {
-            const response = await fetch('/get_marcas');
-            const marcas = await response.json();
-            const select = document.getElementById('marca');
-            
-            marcas.forEach(marca => {
-                const option = document.createElement('option');
-                option.value = marca.id;
-                option.textContent = marca.nome;
-                select.appendChild(option);
-            });
-        } catch (error) {
-            console.error('Erro ao carregar marcas:', error);
-        }
-    }
+          const res = await fetch('/get_marcas');
+          const marcas = await res.json();
+          const select = document.getElementById('marca');
+          marcas.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m.id;
+            opt.textContent = m.nome;
+            select.appendChild(opt);
+          });
+        } catch(e){ console.error(e); }
+      }
 
-    // Carrega modelos quando selecionar marca
-    document.getElementById('marca').addEventListener('change', async function() {
-        const marcaId = this.value;
-        const modeloSelect = document.getElementById('modelo');
-        
-        if (!marcaId) {
-            modeloSelect.innerHTML = '<option value="">Selecione o Modelo</option>';
-            modeloSelect.disabled = true;
-            return;
+      // Carrega modelos ao mudar marca
+      document.getElementById('marca').addEventListener('change', async function(){
+        const modelo = document.getElementById('modelo');
+        if(!this.value){
+          modelo.innerHTML = '<option>Selecione o Modelo</option>';
+          modelo.disabled = true;
+          return;
         }
-
         try {
-            const response = await fetch(`/get_modelos/:${marcaId}`);
-            const modelos = await response.json();
-            
-            modeloSelect.innerHTML = '<option value="">Selecione o Modelo</option>';
-            modeloSelect.disabled = false;
-            
-            modelos.forEach(modelo => {
-                const option = document.createElement('option');
-                option.value = modelo.id;
-                option.textContent = modelo.nome;
-                modeloSelect.appendChild(option);
+          const res = await fetch(`/get_modelos/:${this.value}`);
+          const mods = await res.json();
+          modelo.innerHTML = '<option>Selecione o Modelo</option>';
+          modelo.disabled = false;
+          mods.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m.id;
+            opt.textContent = m.nome;
+            modelo.appendChild(opt);
+          });
+        } catch(e){ console.error(e); }
+      });
+
+      // CONFIRMAÇÃO DE EXCLUSÃO via SweetAlert2
+      function open_conf(type, id){
+        Swal.fire({
+          title: 'Digite "CONFIRMAR" para excluir',
+          input: 'text',
+          showCancelButton: true,
+        }).then(r => {
+          if(r.value==='CONFIRMAR'){
+            const url = type===0?`/delete_car/${id}`:`/delete_user/${id}`;
+            fetch(url).then(()=>{
+              type===0?load_cars():load_users();
             });
-        } catch (error) {
-            console.error('Erro ao carregar modelos:', error);
-        }
-    });
+          }
+        });
+      }
 
-    function close_tab(container){
-        container.style.display = 'none';
-    }
-
-    function open_tab(container) {
-        container.style.display = 'block';
-    }
-
-    function open_conf(type, id) {
-        const container = document.getElementById('container_conf');
-        const tipo = document.getElementById('type');
-        const idInput = document.getElementById('id');
-        idInput.value = id;
-        tipo.value = type;
-        container.style.display = 'block';
-    }
-
-    function process_conf() {
-        const confirmationInput = document.getElementById('confirmationInput').value;
-        const tipo = document.getElementById('type').value;
-        const id = document.getElementById('id').value;
-
-        if (confirmationInput === 'CONFIRMAR') {
-            if (tipo == 0) {
-                fetch(`/delete_car/${id}`)
-                    .then(() => load_cars());
-            } 
-            else if (tipo == 1) {
-                fetch(`/delete_user/${id}`)
-                    .then(() => load_users());
-            }
-        }
-        cls_conf();
-    };
-    
-    function load_cars() {
+      // Carregar lista de carros
+      function load_cars(){
         fetch('/load_cars')
-        .then(response => response.json())
-        .then(data => {
-            const container = document.getElementById('cars');
-            container.innerHTML = '';
-
-            data.forEach(car => {
-                const carDiv = document.createElement('div');
-                carDiv.className = 'car-item';
-                carDiv.innerHTML = `
-                    <div class="car-details">
-                        <p>Modelo: ${car.model}</p>
-                        <p>Marca: ${car.brand}</p>
-                        <p>Ano: ${car.year}</p>
-                        <p>Preço: R$ ${car.price.toLocaleString('pt-BR')}</p>
-                        <p>Quilometragem: ${car.km_driven.toLocaleString('pt-BR')} km</p>
-                    </div>
-                    <div class="car-image">
-                        ${car.images.length > 0 ? 
-                            `<img src="${car.images[0]}" alt="${car.model}" style="max-width: 200px;">` : 
-                            '<p>Sem imagem</p>'}
-                    </div>
-                    <div class="car-actions">
-                        <button onclick="window.location.href='/load_dt/${car.id}'">Detalhes</button>
-                        <button onclick="open_conf(0,${car.id})">Deletar</button>
-                        <button onclick="edit_car(${car.id})">Editar</button>
-                    </div>
-                `;
-                container.appendChild(carDiv);
+          .then(r=>r.json())
+          .then(data=>{
+            const cont = document.getElementById('cars');
+            cont.innerHTML = '';
+            data.forEach(car=>{
+              const div = document.createElement('div');
+              div.className = 'car-item';
+              div.innerHTML = `
+                <div class="car-details">
+                  <p>Modelo: ${car.model}</p>
+                  <p>Marca: ${car.brand}</p>
+                  <p>Ano: ${car.year}</p>
+                  <p>Preço: R$ ${car.price.toLocaleString('pt-BR')}</p>
+                  <p>Km: ${car.km_driven.toLocaleString('pt-BR')}</p>
+                </div>
+                <div class="car-image">
+                  ${car.images.length>0
+                    ? `<img src="${car.images[0]}" alt="${car.model}">`
+                    : '<p>Sem imagem</p>'}
+                </div>
+                <div class="car-actions">
+                  <button onclick="window.location.href='/load_dt/${car.id}'">Detalhes</button>
+                  <button onclick="open_conf(0,${car.id})">Deletar</button>
+                  <button onclick="edit_car(${car.id})">Editar</button>
+                </div>`;
+              cont.appendChild(div);
             });
-        })
-        .catch(error => console.error('Erro ao carregar carros:', error));
-    }
+          })
+          .catch(e=>console.error(e));
+      }
 
-    function load_users() {
+      // Carregar lista de usuários
+      function load_users(){
         fetch('/load_users')
-        .then(response => response.json())
-        .then(data => {
-            const container = document.getElementById('users');
-            container.innerHTML = '';
-
-            data.forEach(user => {
-                const userDiv = document.createElement('div');
-                userDiv.className = 'user-item';
-                userDiv.innerHTML = `
-                    <div class="user-info">
-                        <p>Nome: ${user.nome}</p>
-                        <p>Email: ${user.email}</p>
-                        <p>CPF: ${user.cpf}</p>
-                        <p>Telefone: ${user.telefone}</p>
-                    </div>
-                    <div class="user-actions">
-                        <button onclick="open_conf(1,${user.id})">Deletar</button>
-                    </div>
-                `;
-                container.appendChild(userDiv);
+          .then(r=>r.json())
+          .then(data=>{
+            const cont = document.getElementById('users');
+            cont.innerHTML = '';
+            data.forEach(u=>{
+              const div = document.createElement('div');
+              div.className = 'user-item';
+              div.innerHTML = `
+                <div class="user-info">
+                  <p>Nome: ${u.nome}</p>
+                  <p>Email: ${u.email}</p>
+                  <p>CPF: ${u.cpf}</p>
+                  <p>Tel: ${u.telefone}</p>
+                </div>
+                <div class="user-actions">
+                  <button onclick="open_conf(1,${u.id})">Deletar</button>
+                </div>`;
+              cont.appendChild(div);
             });
-        })
-        .catch(error => console.error('Erro ao carregar usuários:', error));
-    }
-</script>
+          })
+          .catch(e=>console.error(e));
+      }
+
+      // confirmação de envio de formulários
+      ['form_new','form_brand'].forEach(id=>{
+        document.getElementById(id).addEventListener('submit', e=>{
+          e.preventDefault();
+          Swal.fire({
+            title: 'Deseja confirmar?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sim',
+            cancelButtonText: 'Não'
+          }).then(ch=>{
+            if(ch.isConfirmed) e.target.submit();
+          });
+        });
+      });
+    </script>
 </body>
 </html>
+<style>
+/* css/adm.css */
+
+/* Reset básico */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+/* Corpo da página */
+body {
+  background-color: #3a3a4a;
+  color: #fff;
+  padding: 20px;
+}
+
+/* Botões principais no topo */
+#new_car,
+#new_brand {
+  background-color: #bd2a65;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  margin-right: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+#new_car:hover,
+#new_brand:hover {
+  background-color: #7e1d44;
+}
+
+/* Containers de listagem */
+.container-cars,
+.container-users {
+  background-color: #1e1e2a;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  padding: 16px;
+  margin-top: 24px;
+}
+.container-cars h1,
+.container-users h1 {
+  margin-bottom: 12px;
+  font-size: 1.5em;
+  color: #fff;
+}
+
+/* Controles de Atualizar / Adicionar */
+.controls {
+  margin-bottom: 12px;
+}
+.controls button {
+  background-color: #2d2d3a;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  margin-right: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.controls button:hover {
+  background-color: #bd2a65;
+}
+
+/* Itens de carro/usuário */
+.car-item,
+.user-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #2d2d3a;
+  padding: 12px 0;
+}
+.car-item:last-child,
+.user-item:last-child {
+  border-bottom: none;
+}
+.car-details p,
+.user-info p {
+  margin-bottom: 4px;
+}
+.car-image img {
+  max-width: 120px;
+  border-radius: 4px;
+}
+
+/* Botões de Ação nos Itens */
+.car-actions button,
+.user-actions button {
+  background-color: #bd2a65;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  margin-left: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.car-actions button:hover,
+.user-actions button:hover {
+  background-color: #7e1d44;
+}
+
+/* Overlays de formulários */
+#container_new,
+#container_model {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(58, 58, 74, 0.8);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Caixa interna dos modais */
+.confirmation-box {
+  background-color: #2d2d3a;
+  padding: 24px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+.confirmation-box p {
+  margin-bottom: 16px;
+  font-size: 1.1em;
+  color: #fff;
+}
+
+/* Campos e botões dentro do modal */
+.confirmation-box input,
+.confirmation-box select {
+  width: 100%;
+  background-color: #1e1e2a;
+  border: 1px solid #3a3a4a;
+  color: #fff;
+  padding: 10px;
+  margin-bottom: 12px;
+  border-radius: 4px;
+}
+.confirmation-box input:focus,
+.confirmation-box select:focus {
+  outline: none;
+  border-color: #bd2a65;
+}
+
+.confirmation-box button {
+  width: 100%;
+  background-color: #bd2a65;
+  color: #fff;
+  border: none;
+  padding: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.confirmation-box button:hover {
+  background-color: #7e1d44;
+}
+
+/* Ícone de fechar */
+.confirmation-box .fechar {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 1.5em;
+  color: #fff;
+  cursor: pointer;
+}
+
+</style>
