@@ -8,11 +8,13 @@
     <%- include('../../features/index') %>
 </head>
 <body>
+    <button id="new_car" onclick="open_tab(container_new)">novo carro</button>
+    <button id="new_brand" onclick="open_tab(container_brand)">nova marca & modelo</button>
 
     <!-- overlays ocultos -->
     <div id="container_conf">
         <div class="confirmation-box">
-            <span class="fechar" onclick="cls_conf()">&times;</span>
+            <span class="fechar" onclick="close_tab(container_conf)">&times;</span>
             <p>Digite "CONFIRMAR" para deletar:</p>
             <input type="hidden" value="null" id="id">
             <input type="hidden" value="null" id="type">
@@ -23,7 +25,7 @@
 
     <div id="container_new">
         <div class="confirmation-box">
-            <span class="fechar" onclick="close_new()">&times;</span>
+            <span class="fechar" onclick="close_tab(container_new)">&times;</span>
             <p>Adicionar Carro</p>
             <form id="form_new" action="/add_car" method="POST" enctype="multipart/form-data">
                 <select name="marca_id" id="marca" required>
@@ -47,6 +49,19 @@
                 <input type="number" name="preco" placeholder="Preço" step="0.01" required>
                 
                 <input type="file" name="photo" multiple accept=".jpg, .jpeg, .png">
+                <button type="submit">Adicionar</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="container_brand">
+        <div class="confirmation-box">
+            <span class="fechar" onclick="close_tab(container_brand)">&times;</span>
+            <form action="/add_brand" method="POST">
+                <p>Adicionar Marca e Modelo</p>
+                <input type="text" name="brand" placeholder="Nome da Marca" required>
+                <input type="text" name="model" placeholder="Nome do Modelo" required>
+                <br>
                 <button type="submit">Adicionar</button>
             </form>
         </div>
@@ -171,6 +186,14 @@
     function close_new() {
         const container = document.getElementById('container_new');
         container.style.display = 'none';  
+    }
+
+    function close_tab(container){
+        container.style.display = 'none';
+    }
+
+    function open_tab(container) {
+        container.style.display = 'block';
     }
 
     function load_cars() {
