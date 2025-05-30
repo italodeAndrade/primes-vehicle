@@ -270,7 +270,8 @@ const {
     loadUsers,
     deleteUser,
     deleteCar,
-    addCar
+    addCar,
+    addmodel
 } = require('./functions/admfunc.js');
 const { get } = require('http');
 
@@ -279,6 +280,7 @@ app.get('/load_users', loadUsers);
 app.get('/delete_user/:id', deleteUser);
 app.get('/delete_car/:id', deleteCar);
 app.post('/add_car', addCar);
+app.post('/add_model', addmodel);
 // comando do admin
 
 app.listen(PORT, () => {

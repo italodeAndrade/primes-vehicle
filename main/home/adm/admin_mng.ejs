@@ -54,10 +54,10 @@
         </div>
     </div>
 
-    <div id="container_brand">
+    <div id="container_model">
         <div class="confirmation-box">
             <span class="fechar" onclick="close_tab(container_brand)">&times;</span>
-            <form action="/add_brand" method="POST">
+            <form action="/add_model" method="POST">
                 <p>Adicionar Marca e Modelo</p>
                 <input type="text" name="brand" placeholder="Nome da Marca" required>
                 <input type="text" name="model" placeholder="Nome do Modelo" required>
@@ -125,7 +125,7 @@
         }
 
         try {
-            const response = await fetch(`/get_modelos?marca_id=${marcaId}`);
+            const response = await fetch(`/get_modelos/:${marcaId}`);
             const modelos = await response.json();
             
             modeloSelect.innerHTML = '<option value="">Selecione o Modelo</option>';
@@ -142,6 +142,14 @@
         }
     });
 
+    function close_tab(container){
+        container.style.display = 'none';
+    }
+
+    function open_tab(container) {
+        container.style.display = 'block';
+    }
+
     function open_conf(type, id) {
         const container = document.getElementById('container_conf');
         const tipo = document.getElementById('type');
@@ -149,15 +157,6 @@
         idInput.value = id;
         tipo.value = type;
         container.style.display = 'block';
-    }
-
-    function cls_conf() {
-        const container = document.getElementById('container_conf');
-        const tipo = document.getElementById('type');
-        const id = document.getElementById('id');
-        id.value = null;
-        tipo.value = null;
-        container.style.display = 'none';
     }
 
     function process_conf() {
@@ -178,24 +177,6 @@
         cls_conf();
     };
     
-    function open_new() {
-        const container = document.getElementById('container_new');
-        container.style.display = 'block';  
-    }
-
-    function close_new() {
-        const container = document.getElementById('container_new');
-        container.style.display = 'none';  
-    }
-
-    function close_tab(container){
-        container.style.display = 'none';
-    }
-
-    function open_tab(container) {
-        container.style.display = 'block';
-    }
-
     function load_cars() {
         fetch('/load_cars')
         .then(response => response.json())

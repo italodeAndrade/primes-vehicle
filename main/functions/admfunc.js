@@ -195,10 +195,35 @@ async function addCar(req, res) {
     }
 }
 
+async function addmodel(req, res){
+    const { nome, marca_name } = req.body;
+
+    if (!nome || !marca_id) {
+        return res.status(400).send('Nome e Marca são obrigatórios');
+    }
+
+    try {
+        const insertQuery = `
+            INSERT INTO modelos (nome, marca_id)
+            VALUES ($1, (SELECT id FROM marcas WHERE nome = $2))
+            reTURNING id;
+            `;
+        
+        const result = await db.query(insertQuery, [nome, marca_name]);
+        const modelId = result.rows[0].id;
+        res.status(201).json({ id: modelId });
+    } 
+    catch (error) {
+        console.error('Erro ao adicionar modelo:', error);
+        res.status(500).send('Erro ao adicionar modelo');
+    }
+}
+
 module.exports = {
     loginAdmin,
     loadUsers,
     deleteUser,
     deleteCar,
-    addCar
+    addCar,
+    addmodel
 };
