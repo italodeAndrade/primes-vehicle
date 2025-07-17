@@ -47,14 +47,28 @@
         </div>
     </div>
 
+
+    
+    <!-- Modal de Adicionar Marca -->
+    <div id="container_marca">
+        <div class="confirmation-box">
+            <span class="fechar" onclick="close_tab(container_model)">&times;</span>
+            <p>Adicionar Marca</p>
+            <form id="form_brand" action="/add_marca" method="POST">
+                <input type="text" name="nome" placeholder="Nome da Marca" required>
+                <button type="submit">Adicionar</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal de Adicionar Marca/Modelo -->
     <div id="container_model">
         <div class="confirmation-box">
             <span class="fechar" onclick="close_tab(container_model)">&times;</span>
             <p>Adicionar Modelo</p>
-            <form id="form_brand" action="/add_model" method="POST">
-                <input type="text" name="brand" placeholder="Nome da Marca" required>
-                <input type="text" name="model" placeholder="Nome do Modelo" required>
+            <form id="form_brand" action="/add_modelo" method="POST">
+                <input type="text" name="nome" placeholder="Nome da Marca" required>
+                <input type="text" name="marca" placeholder="Nome do Modelo" required>
                 <button type="submit">Adicionar</button>
             </form>
         </div>

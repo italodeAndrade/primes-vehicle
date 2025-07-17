@@ -1,10 +1,11 @@
 const  db = require('../db/consql.js');
 const cloudinary = require('../db/cloud.js');
+const { json } = require('express');
 
 // Login Admin
 async function loginAdmin(req, res) {
     const { login, password } = req.body;
-    const query = 'SELECT * FROM admins WHERE log = $1 AND senha = $2';
+    const query = 'SELECT * FROM adm WHERE log = $1 AND senha = $2';
     
     try {
         const result = await db.query(query, [login, password]);
@@ -195,10 +196,32 @@ async function addCar(req, res) {
     }
 }
 
-async function addmodel(req, res){
-    const { nome, marca_name } = req.body;
 
-    if (!nome || !marca_id) {
+async function load_marca() {
+    
+}
+async function load_modelo() {
+    
+}
+
+
+async function add_marca(req,res) {    
+    const marca = req.body;
+    try{
+        const query=`insert into marcas(nome) values ($1)`;
+        const result= await db.query(query, [marca])
+        res.json("adicionado com sucesso");
+    }
+    catch(error){
+        console.error('erro ao adicionar marca:', error);
+        res.send('erro ao adicionar marca')
+    }
+}
+
+async function add_modelo(req, res){
+    const { nome, marca } = req.body;
+
+    if (!nome || !marca) {
         return res.status(400).send('Nome e Marca são obrigatórios');
     }
 
@@ -209,7 +232,7 @@ async function addmodel(req, res){
             reTURNING id;
             `;
         
-        const result = await db.query(insertQuery, [nome, marca_name]);
+        const result = await db.query(insertQuery, [nome, marca]);
         const modelId = result.rows[0].id;
         res.status(201).json({ id: modelId });
     } 
@@ -225,5 +248,6 @@ module.exports = {
     deleteUser,
     deleteCar,
     addCar,
-    addmodel
+    add_modelo,
+    add_marca
 };
