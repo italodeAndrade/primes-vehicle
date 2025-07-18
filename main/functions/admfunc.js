@@ -205,13 +205,20 @@ async function load_modelo() {
 }
 
 
-async function add_marca(req,res) {    
-    const marca = req.body;
-    try{
-        const query=`insert into marcas(nome) values ($1)`;
-        const result= await db.query(query, [marca])
-        res.json("adicionado com sucesso");
+async function add_marca(req, res) {
+
+    const { nome } = req.body; 
+
+    if (!nome) {
+        return res.status(400).send('O nome da marca não pode ser vazio.');
     }
+
+    try {
+        const query = 'INSERT INTO marcas (nome) VALUES ($1)';
+        await db.query(query, [nome]); 
+        res.redirect('/admin');
+    }
+
     catch(error){
         console.error('erro ao adicionar marca:', error);
         res.send('erro ao adicionar marca')
