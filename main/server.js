@@ -97,7 +97,7 @@ mongoconn();
 
 // comandos locais
 
-
+// comando do admin
 const { 
     loginAdmin,
     loadUsers,
@@ -117,6 +117,22 @@ app.post('/add_car', addCar);
 app.post('/add_modelo', add_modelo);
 app.post('/add_marca', add_marca);
 // comando do admin
+
+//comandos do usuario
+const {
+    loginUser,
+    registerUser,
+    showProfile,
+    logoutUser
+} = require('./functions/userfunc.js');
+
+app.post('/login_user', loginUser);
+app.post('/register_user', registerUser);
+app.get('/profile', showProfile);
+app.get('/logout', logoutUser);
+
+//comandos do usuario
+
 
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
