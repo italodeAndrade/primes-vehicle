@@ -71,7 +71,7 @@ async function loadDetails(req, res) {
             c.cor AS color,
             c.automatico AS automatic,
             c.preco AS price,
-            c.data_criacao AS created_at
+            c.criado AS created_at
         FROM carros c
         JOIN modelos md ON c.modelo_id = md.id
         JOIN marcas m ON md.marca_id = m.id
