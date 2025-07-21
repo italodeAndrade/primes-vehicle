@@ -184,7 +184,8 @@ async function addCar(req, res) {
                     folder: 'vehicle',
                     public_id: `${carId}_${index}`,
                     tags: [tag],
-                    resource_type: 'image'
+                    resource_type: 'image',
+                    timeout: 120000     
                 });
             }
         }
@@ -194,14 +195,6 @@ async function addCar(req, res) {
         console.error('Erro ao adicionar carro:', error);
         res.status(500).send('Erro ao adicionar carro');
     }
-}
-
-
-async function load_marca() {
-    
-}
-async function load_modelo() {
-    
 }
 
 
@@ -225,27 +218,25 @@ async function add_marca(req, res) {
     }
 }
 
-async function add_modelo(req, res){
-    const { nome, marca } = req.body;
-
-    if (!nome || !marca) {
-        return res.status(400).send('Nome e Marca são obrigatórios');
+async function add_modelo(req, res) {
+    const { nome, marca_id } = req.body;
+    if (!nome || !marca_id) {
+        return res.status(400).send('O nome do modelo e a seleção da marca são obrigatórios.');
     }
 
     try {
+
         const insertQuery = `
             INSERT INTO modelos (nome, marca_id)
-            VALUES ($1, (SELECT id FROM marcas WHERE nome = $2))
-            reTURNING id;
-            `;
-        
-        const result = await db.query(insertQuery, [nome, marca]);
-        const modelId = result.rows[0].id;
-        res.status(201).json({ id: modelId });
-    } 
-    catch (error) {
+            VALUES ($1, $2)
+            RETURNING id;
+        `;
+        const result = await db.query(insertQuery, [nome, marca_id]);
+        res.redirect('/admin');
+
+    } catch (error) {
         console.error('Erro ao adicionar modelo:', error);
-        res.status(500).send('Erro ao adicionar modelo');
+        res.status(500).send('Erro de servidor ao adicionar o modelo.');
     }
 }
 
